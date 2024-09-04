@@ -1,6 +1,7 @@
 # UniClub Project
 
 ![UniClub Project](imglink)
+
 **Website:** [Link](link)
 ## App Description
 UniClub Application is an app developed to allow the users to add channels for university courses, and add comments, posts, details related to each course in order to have a technical community in the university, that everyone can share their added comments, details, and posts with every student in the university.
@@ -23,6 +24,7 @@ UniClub Application is an app developed to allow the users to add channels for u
 
 ## WireFrame:
 
+- ![WireFrame](/img/WireFrame.png)
 
 
 ## Technologies Used
