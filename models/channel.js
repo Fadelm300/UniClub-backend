@@ -16,6 +16,6 @@ const channelSchema = new mongoose.Schema(
   },
 );
 
-const Channel = mongoose.model('Hoot', channelSchema);
+const Channel = mongoose.model('Channel', channelSchema);
 
 module.exports = Channel;
