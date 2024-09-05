@@ -11,7 +11,7 @@ const commentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const hootSchema = new mongoose.Schema(
+const postSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -32,6 +32,6 @@ const hootSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Hoot = mongoose.model('Hoot', hootSchema);
+const Post = mongoose.model('Post', postSchema);
 
-module.exports = Hoot;
+module.exports = Post;

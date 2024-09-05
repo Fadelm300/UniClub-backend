@@ -10,7 +10,7 @@ const testJWTRouter = require('./controllers/test-jwt');
 
 const usersRouter = require('./controllers/users');
 const profilesRouter = require('./controllers/profiles');
-const hootsRouter = require('./controllers/hoots.js');
+const postsRouter = require('./controllers/posts.js');
 
 mongoose.connect(process.env.MONGODB_URI);
 
@@ -25,7 +25,7 @@ app.use(express.json());
 app.use('/test-jwt', testJWTRouter);
 app.use('/users', usersRouter);
 app.use('/profiles', profilesRouter);
-app.use('/hoots', hootsRouter);
+app.use('/posts', postsRouter);
 
 app.listen(process.env.PORT, () => {
   console.log('The express app is ready!');
