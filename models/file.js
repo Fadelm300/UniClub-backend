@@ -3,10 +3,9 @@ const mongoose = require('mongoose');
 
 
 const fileSchema = new mongoose.Schema({
-  //عدل الref 
     channel: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Channel',
       required: true,
     },
 
