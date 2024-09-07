@@ -1,18 +1,23 @@
 const mongoose = require('mongoose');
 
-
 const channelSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
     },
-    posts: {
+    path:{
+      type: String,
+      required: true,
+      unique:true,
+    },
+    description: {
       type: String,
       required: true,
     },
+    posts:[{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     moderator: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    father: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel' },
+    subchannels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Channel' }],
   },
 );
 
