@@ -19,8 +19,16 @@ router.get('/*', async (req, res) => {
   router.post("/*",verifyToken, async (req, res) => {
     try {
       const parantPath = req.params[0]
+      const regex = /^[a-z0-9]+$/
+      req.body.name =req.body.name.trim()
+      if(regex.test(req.body.name)){
       const channelPath = parantPath + `/${req.body.name}`
       req.body.path = channelPath
+      }else
+      {
+        return res.status(200).json(`${req.body.name} is not a valid name channel has to be lower case and no spaces only letters and numbers`);
+      }
+      
       req.body.moderator = req.user.id;
 
       const parantChannel = await Channel.findOne({name : parantPath});
