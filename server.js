@@ -12,7 +12,8 @@ const testJWTRouter = require('./controllers/test-jwt');
 const usersRouter = require('./controllers/users');
 const profilesRouter = require('./controllers/profiles');
 const postsRouter = require('./controllers/posts.js');
-const channelRouter = require('./controllers/channel.js')
+const channelRouter = require('./controllers/channel.js');
+const FileRouter = require ('./controllers/file.js');
 
 mongoose.connect(process.env.MONGODB_URI);
 
@@ -29,6 +30,7 @@ app.use('/users', usersRouter);
 app.use('/profiles', profilesRouter);
 app.use('/posts', postsRouter);
 app.use('/channels', channelRouter);
+app.use('/files',FileRouter);
 
 app.listen(process.env.PORT, () => {
   console.log('The express app is ready!');
