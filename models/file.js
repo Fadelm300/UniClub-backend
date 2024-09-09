@@ -3,11 +3,7 @@ const mongoose = require('mongoose');
 
 
 const fileSchema = new mongoose.Schema({
-    channel: {
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'Channel',
-      required: true,
-    },
+ 
 
     title: {
         type: String,
@@ -20,15 +16,15 @@ const fileSchema = new mongoose.Schema({
 
       link: {
         type: String,
-        required: true,
       },
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
   }, { timestamps: true });
 
 
-  const file = mongoose.model('file', fileSchema);
+  const File = mongoose.model('File', fileSchema);
 
-  module.exports = file;
+  module.exports = File;
 
 
 

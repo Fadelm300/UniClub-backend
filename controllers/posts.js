@@ -133,7 +133,7 @@ router.delete('/*/:postId', async (req, res) => {
   }
 });
 
-router.post('/:postId/comments', async (req, res) => {
+router.post('/*/:postId/comments', async (req, res) => {
   try {
     req.body.user = req.user.id;
     const post = await Post.findById(req.params.postId);

@@ -18,6 +18,7 @@ const channelSchema = new mongoose.Schema(
     posts:[{type: mongoose.Schema.Types.ObjectId, ref: 'Post'}],
     moderator: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     subchannels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Channel' }],
+    files:[{type: mongoose.Schema.Types.ObjectId, ref: 'File'}]
   },
 );
 
