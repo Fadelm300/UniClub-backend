@@ -22,11 +22,16 @@ router.use(verifyToken);
 
 router.get('/*/:postId', async (req, res) => {
   try {
-    // const channelPath = req.params[0];
-    // const channel = await Channel.findOne({ path: channelPath }).populate("posts");
-    // console.log(channel);
+    const postId = req.params.postId;
 
-    const post = await Post.findById(req.params.postId);
+    const channelPath = req.params[0];
+    const channel = await Channel.findOne({ path: channelPath }).populate('posts');
+    
+    const post = channel.posts.find(p => p._id.toString() == postId);
+
+    if (!post) {
+      return res.status(400).send("Post not found in channel")
+    }
     
     res.status(200).json(post);
   } catch (error) {
@@ -55,17 +60,36 @@ router.post('/*', async (req, res) => {
 
 router.put('/*/:postId', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.postId);
 
-    if (!post.user.equals(req.user.id)) {
-      return res.status(403).send("You're not allowed to do that!");
+    const postId = req.params.postId;
+
+    const channelPath = req.params[0];
+    const channel = await Channel.findOne({ path: channelPath }).populate(
+      "posts"
+    );
+
+    if (!channel) {
+      throw new Error("Channel not found");
     }
+
+    // const post = channel.posts.id( postId );
+    const post = channel.posts.find((p) => p._id.toString() == postId);
+
+    console.log(post);
+
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    post.set(req.body);
+
+    res.status(200).json(post);
 
     const updatedPost = await Post.findByIdAndUpdate(req.params.postId, req.body, { new: true });
 
-    updatedPost._doc.user = req.user;
 
-    res.status(200).json(updatedPost);
+    await channel.save();
+
   } catch (error) {
     res.status(500).json(error);
   }
@@ -73,19 +97,37 @@ router.put('/*/:postId', async (req, res) => {
 
 router.delete('/*/:postId', async (req, res) => {
   try {
-    // const channelPath = req.params[0];
 
-    // const channel = await pO.findOne({ path: channelPath });
+    const postId = req.params.postId;
 
-    // const post = await Post.findById(req.params.postId);
-    const post = await Post.findById(req.params.postId);
+    const channelPath = req.params[0];
+    const channel = await Channel.findOne({ path: channelPath }).populate(
+      "posts"
+    );
 
-    if (!post.user.equals(req.user.id)) {
-      return res.status(403).send("You're not allowed to do that!");
+    if (!channel) {
+      throw new Error("Channel not found");
     }
 
-    const deletedPost = await Post.findByIdAndDelete(req.params.postId);
-    res.status(200).json(deletedPost);
+    const postIndex = channel.posts.findIndex(
+      (post) => post._id.toString() === postId
+    );
+
+
+    if (postIndex === -1) {
+      throw new Error("Post not found");
+    }
+
+    const post = await Post.findByIdAndDelete(req.params.postId);
+
+
+    res.status(200).json(channel.posts[postIndex]);
+
+    channel.posts.splice(postIndex, 1);
+
+
+    await channel.save();
+
   } catch (error) {
     res.status(500).json(error);
   }

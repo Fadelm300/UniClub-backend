@@ -17,7 +17,6 @@ router.get('/*', async (req, res) => {
     }
   });
 
-  
 
   router.post("/*",verifyToken, async (req, res) => {
     try {
