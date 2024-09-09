@@ -7,14 +7,16 @@ const router = express.Router();
 router.get('/*', async (req, res) => {
     try {
       const channelPath = req.params[0]
-      const channel = await Channel.findOne({path:channelPath}).populate('subchannels','name');
+      const channel = await Channel.findOne({ path: channelPath }).populate([
+        { path: "subchannels", select: "name" },
+        { path: "posts", model: "Post" },
+      ]);
       res.status(200).json(channel);
     } catch (error) {
       res.status(500).json(error);
     }
   });
 
-  
 
   router.post("/*",verifyToken, async (req, res) => {
     try {
@@ -23,6 +25,7 @@ router.get('/*', async (req, res) => {
       req.body.name =req.body.name.trim()
       if(regex.test(req.body.name)){
       const channelPath = parantPath + `/${req.body.name}`
+      // const channelPath = req.body.name;
       req.body.path = channelPath
       }else
       {
