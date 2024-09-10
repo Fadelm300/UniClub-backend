@@ -34,12 +34,15 @@ router.get('/*', async (req, res) => {
       
       req.body.moderator = req.user.id;
 
-      const parantChannel = await Channel.findOne({name : parantPath});
+      const parantChannel = await Channel.findOne({path : parantPath});
+
+      console.log(parantChannel)
       const findChannel = await Channel.findOne({path :req.body.path});
 
       if(!findChannel){
         const channel = await Channel.create(req.body);
         parantChannel.subchannels.push(channel._id);
+        console.log(parantChannel)
         await parantChannel.save();
         res.status(200).json(channel);
       }else{
