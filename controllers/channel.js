@@ -42,7 +42,7 @@ router.post("/*", verifyToken, async (req, res) => {
 
     req.body.moderator = req.user.id;
 
-    const parantChannel = await Channel.findOne({ name: parantPath });
+    const parantChannel = await Channel.findOne({ path: parantPath });
     const findChannel = await Channel.findOne({ path: req.body.path });
 
     if (!findChannel) {
