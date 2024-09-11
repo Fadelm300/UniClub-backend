@@ -15,6 +15,14 @@ router.get("/*", async (req, res) => {
           path: "user",
           model: "User"
         }
+      },
+      {
+        path: "files",
+        model: "File",
+        populate: {
+          path: "user",
+          model: "User"
+        }
       }
     ]);
     res.status(200).json(channel);
