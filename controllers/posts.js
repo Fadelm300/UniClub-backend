@@ -42,7 +42,7 @@ router.get('/*/:postId', async (req, res) => {
 router.post('/*', async (req, res) => {
   try {
     const channelPath = req.params[0];
-
+    req.body.path = channelPath;
     req.body.user = req.user.id;
     const post = await Post.create(req.body);
     const channel = await Channel.findOne({path: channelPath});
@@ -151,5 +151,7 @@ router.post('/*/:postId/comments', async (req, res) => {
     res.status(500).json(error);
   }
 });
+
+
 
 module.exports = router;
