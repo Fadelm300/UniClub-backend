@@ -29,7 +29,7 @@ router.get('/*/:postId', async (req, res) => {
     
     // const post = channel.posts.find(p => p._id.toString() == postId);
     const post = await Post.findById(postId).populate([
-      {path: "comments.user", model: "User"},
+      {path: "user", model: "User"},
       {path: "comments.user",model: "User"}
       ]);
     console.log(post);
