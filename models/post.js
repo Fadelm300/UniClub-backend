@@ -20,6 +20,9 @@ const postSchema = new mongoose.Schema(
     category: {
       type: String,
     },
+    path: {
+      type: String,
+    },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     comments: [commentSchema]
   },
