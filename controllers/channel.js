@@ -70,10 +70,13 @@ router.post("/*", verifyToken, async (req, res) => {
 });
 
 router.delete("/*", verifyToken, async (req,res)=>{
-    const channel = await Channel.findOne({ path: channelPath });
-    if(req.user._id == channel.moderator){
+  // Example req.params[0]
+  const channelPath = req.params[0];
+  console.log(channelPath)
+  const channel = await Channel.findOneAndDelete({ path: "uob/itcs114" });
+  res.status(200).json('ok');
+  // console.log(channel)
 
-    }
 });
 
 module.exports = router;
