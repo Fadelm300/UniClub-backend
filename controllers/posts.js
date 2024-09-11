@@ -19,7 +19,6 @@ const router = express.Router();
 //     res.status(500).json(error);
 //   }
 // });
-router.use(verifyToken);
 
 router.get('/*/:postId', async (req, res) => {
   try {
@@ -43,6 +42,8 @@ router.get('/*/:postId', async (req, res) => {
     res.status(500).json(error);
   }
 });
+
+router.use(verifyToken);
 
 router.post('/*', async (req, res) => {
   try {
