@@ -9,7 +9,6 @@ const router = express.Router();
 
 // ========= Protected Routes =========
 
-router.use(verifyToken);
 
 // router.get('/*', async (req, res) => {
 //   try {
@@ -29,7 +28,10 @@ router.get('/*/:postId', async (req, res) => {
     // const channel = await Channel.findOne({ path: channelPath }).populate('posts');
     
     // const post = channel.posts.find(p => p._id.toString() == postId);
-    const post = await Post.findById(postId).populate('user');
+    const post = await Post.findById(postId).populate([
+      {path: "comments.user", model: "User"},
+      {path: "comments.user",model: "User"}
+      ]);
     console.log(post);
     if (!post) {
       return res.status(400).send("Post not found in channel")
@@ -40,6 +42,9 @@ router.get('/*/:postId', async (req, res) => {
     res.status(500).json(error);
   }
 });
+
+router.use(verifyToken);
+
 router.post('/*', async (req, res) => {
   try {
     const channelPath = req.params[0];
@@ -65,9 +70,15 @@ router.put('/*/:postId', async (req, res) => {
     const postId = req.params.postId;
 
     const channelPath = req.params[0];
-    const channel = await Channel.findOne({ path: channelPath }).populate(
-      "posts"
-    );
+    const channel = await Channel.findOne({ path: channelPath }).populate({
+      // path: "user",
+      // model: "User",
+      populate: {
+        path: "comments.user",
+        model: "User"
+      }
+
+    });
 
     if (!channel) {
       throw new Error("Channel not found");
