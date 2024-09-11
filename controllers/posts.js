@@ -8,6 +8,7 @@ const router = express.Router();
 // ========== Public Routes ===========
 
 // ========= Protected Routes =========
+
 router.use(verifyToken);
 
 // router.get('/*', async (req, res) => {
@@ -25,10 +26,11 @@ router.get('/*/:postId', async (req, res) => {
     const postId = req.params.postId;
 
     const channelPath = req.params[0];
-    const channel = await Channel.findOne({ path: channelPath }).populate('posts');
+    // const channel = await Channel.findOne({ path: channelPath }).populate('posts');
     
-    const post = channel.posts.find(p => p._id.toString() == postId);
-
+    // const post = channel.posts.find(p => p._id.toString() == postId);
+    const post = await Post.findById(postId).populate('user');
+    console.log(post);
     if (!post) {
       return res.status(400).send("Post not found in channel")
     }
@@ -38,7 +40,6 @@ router.get('/*/:postId', async (req, res) => {
     res.status(500).json(error);
   }
 });
-
 router.post('/*', async (req, res) => {
   try {
     const channelPath = req.params[0];
@@ -133,8 +134,9 @@ router.delete('/*/:postId', async (req, res) => {
   }
 });
 
-router.post('/*/:postId/comments', async (req, res) => {
+router.post('comments/*/:postId', async (req, res) => {
   try {
+    const channelPath = req.params[0];
     req.body.user = req.user.id;
     const post = await Post.findById(req.params.postId);
     post.comments.push(req.body);
