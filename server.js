@@ -15,6 +15,7 @@ const postsRouter = require('./controllers/posts.js');
 const channelRouter = require('./controllers/channel.js');
 const FileRouter = require ('./controllers/file.js');
 const commentRouter = require ('./controllers/comments.js');
+const adminRouter = require ('./controllers/admin.js')
 mongoose.connect(process.env.MONGODB_URI);
 
 mongoose.connection.on('connected', () => {
@@ -32,6 +33,7 @@ app.use('/posts', postsRouter);
 app.use('/channels', channelRouter);
 app.use('/files',FileRouter);
 app.use('/comments' , commentRouter)
+app.use('/admin' , adminRouter)
 
 app.listen(process.env.PORT, () => {
   console.log('The express app is ready!');
