@@ -7,162 +7,132 @@ const router = express.Router();
 
 // ========== Public Routes ===========
 
-// ========= Protected Routes =========
-
-
-// router.get('/*', async (req, res) => {
-//   try {
-//     // const channelPath = req.params[0];
-//     const posts = await Post.find({}).populate('user').sort({ createdAt: 'desc' });
-//     res.status(200).json(posts);
-//   } catch (error) {
-//     res.status(500).json(error);
-//   }
-// });
 router.get('/*/:postId', async (req, res) => {
   try {
     const postId = req.params.postId;
-
     const channelPath = req.params[0];
-    // const channel = await Channel.findOne({ path: channelPath }).populate('posts');
-    
-    // const post = channel.posts.find(p => p._id.toString() == postId);
+
     const post = await Post.findById(postId).populate([
-      {path: "user", model: "User"},
-      {path: "comments.user",model: "User"}
-      ]);
-    console.log(post);
+      { path: "user", model: "User" },
+      { path: "comments.user", model: "User" }
+    ]);
+    
     if (!post) {
-      return res.status(400).send("Post not found in channel")
+      return res.status(404).send("Post not found in channel");
     }
     
     res.status(200).json(post);
   } catch (error) {
+    console.error('Error fetching post:', error);
     res.status(500).json(error);
   }
 });
 
+// ========== Protected Routes ==========
+
 router.use(verifyToken);
+
+// Create a new post
 router.post('/*', async (req, res) => {
   try {
     const channelPath = req.params[0];
     req.body.path = channelPath;
     req.body.user = req.user.id;
+    
     const post = await Post.create(req.body);
-    const channel = await Channel.findOne({path: channelPath});
+    const channel = await Channel.findOne({ path: channelPath });
     channel.posts.push(post._id);
-
+    
     await channel.save();
-
-    post._doc.user = req.user;
+    
+    post._doc.user = req.user; // Attach user data to the post
     res.status(201).json(post);
   } catch (error) {
-    console.log(error);
+    console.error('Error creating post:', error);
     res.status(500).json(error);
   }
 });
 
+// Update a post
 router.put('/*/:postId', async (req, res) => {
   try {
-
     const postId = req.params.postId;
-
     const channelPath = req.params[0];
-    const channel = await Channel.findOne({ path: channelPath }).populate({
-      // path: "user",
-      // model: "User",
-      populate: {
-        path: "comments.user",
-        model: "User"
-      }
 
-    });
-
-    if (!channel) {
-      throw new Error("Channel not found");
-    }
-
-    // const post = channel.posts.id( postId );
-    const post = channel.posts.find((p) => p._id.toString() == postId);
-
-    console.log(post);
-
+    const post = await Post.findById(postId);
     if (!post) {
-      throw new Error("Post not found");
+      return res.status(404).send("Post not found");
     }
 
-    post.set(req.body);
+    // Check if the user trying to edit the post is the owner
+    if (post.user.toString() !== req.user.id) {
+      return res.status(403).send("You are not authorized to edit this post");
+    }
+
+    // Update the post
+    Object.assign(post, req.body); // Use Object.assign to update fields
+    await post.save();
 
     res.status(200).json(post);
-
-    const updatedPost = await Post.findByIdAndUpdate(req.params.postId, req.body, { new: true });
-
-
-    await channel.save();
-
   } catch (error) {
+    console.error('Error updating post:', error);
     res.status(500).json(error);
   }
 });
 
+// Delete a post
 router.delete('/*/:postId', async (req, res) => {
   try {
-
     const postId = req.params.postId;
-
     const channelPath = req.params[0];
-    const channel = await Channel.findOne({ path: channelPath }).populate(
-      "posts"
-    );
+    const channel = await Channel.findOne({ path: channelPath }).populate("posts");
 
     if (!channel) {
       throw new Error("Channel not found");
     }
 
-    const postIndex = channel.posts.findIndex(
-      (post) => post._id.toString() === postId
-    );
-
-
+    const postIndex = channel.posts.findIndex(post => post._id.toString() === postId);
     if (postIndex === -1) {
       throw new Error("Post not found");
     }
 
-    const post = await Post.findByIdAndDelete(req.params.postId);
-
-
-    res.status(200).json(channel.posts[postIndex]);
+    const post = await Post.findByIdAndDelete(postId);
+    if (!post) {
+      throw new Error("Post deletion failed");
+    }
 
     channel.posts.splice(postIndex, 1);
-
-
     await channel.save();
 
+    res.status(200).json(post);
   } catch (error) {
+    console.error('Error deleting post:', error);
     res.status(500).json(error);
   }
 });
 
+// Add a comment to a post
 router.post('comments/*/:postId', async (req, res) => {
   try {
     const channelPath = req.params[0];
     req.body.user = req.user.id;
     const post = await Post.findById(req.params.postId);
+
+    if (!post) {
+      return res.status(404).send("Post not found");
+    }
+
     post.comments.push(req.body);
     await post.save();
 
-    // Find the newly created comment:
     const newComment = post.comments[post.comments.length - 1];
-
     newComment._doc.user = req.user;
 
-    // Respond with the newComment:
     res.status(201).json(newComment);
   } catch (error) {
+    console.error('Error adding comment:', error);
     res.status(500).json(error);
   }
 });
-
-
 
 module.exports = router;
