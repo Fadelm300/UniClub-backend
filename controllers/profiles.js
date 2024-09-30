@@ -30,4 +30,44 @@ router.get('/:userId', verifyToken, async (req, res) => {
   }
 });
 
+
+router.put('/:userId', verifyToken, async (req, res) => {
+  try {
+    if (req.user.id !== req.params.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, {
+      username: req.body.username,
+      phone: req.body.phone,
+      email: req.body.email,
+    }, { new: true });
+
+    if (!updatedUser) {
+      res.status(404);
+      throw new Error('Profile not found.');
+    }
+
+    res.json({ user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+router.delete('/:userId', verifyToken, async (req, res) => {
+  try {
+    if (req.user.id !== req.params.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    await User.findByIdAndDelete(req.user.id);
+
+    res.json({ message: 'User deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 module.exports = router;
