@@ -17,6 +17,7 @@ const FileRouter = require ('./controllers/file.js');
 const commentRouter = require ('./controllers/comments.js');
 const adminRouter = require ('./controllers/admin.js')
 const EventRouter = require('./controllers/eventController');
+const uploadImage = require("./uploadImage.js");
 
 mongoose.connect(process.env.MONGODB_URI);
 
@@ -37,6 +38,22 @@ app.use('/files',FileRouter);
 app.use('/comments' , commentRouter)
 app.use('/admin' , adminRouter)
 app.use('/event', EventRouter )
+
+
+
+app.post("/upload", async (req, res) => {
+  uploadImage(req.body.image)
+  
+    .then((url) => {
+      console.log(url)
+      res.status(200).json({ url });
+    })
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
+});
+
+
 app.listen(process.env.PORT, () => {
   console.log('The express app is ready!');
 });

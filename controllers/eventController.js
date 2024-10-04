@@ -24,9 +24,8 @@ router.get('/:eventid', async (req, res) => {
 
 // Add a new event (protected route)
 router.post('/', verifyToken, async (req, res) => {
-    const { title, description, date, time, location, logo } = req.body;
-
-    const newEvent = new Event({ title, description, date, time, location, logo });
+    const { title, description, date, time, location, image } = req.body;
+    const newEvent = new Event({ title, description, date, time, location, image });
 
     try {
         const savedEvent = await newEvent.save();
