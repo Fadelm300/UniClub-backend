@@ -20,7 +20,13 @@ const userSchema = new mongoose.Schema({
   },
   admin:{
     type: Boolean
-  }
+  },
+  following:
+    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
+  ,
+  followers:
+    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
+  
 });
 
 userSchema.set('toJSON', {
