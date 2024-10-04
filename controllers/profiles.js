@@ -7,9 +7,9 @@ const verifyToken = require('../middleware/verify-token');
 router.get('/:userId', verifyToken, async (req, res) => {
   try {
    
-    // if (req.user.id !== req.params.userId) {
-    //   return res.status(401).json({ error: "Unauthorized" });
-    // }
+    if (req.user.id !== req.params.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -66,6 +66,30 @@ router.delete('/:userId', verifyToken, async (req, res) => {
     res.json({ message: 'User deleted successfully.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/other/:userId', verifyToken, async (req, res) => {
+  try {
+   
+    
+
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      res.status(404);
+      throw new Error('Profile not found.');
+    }
+
+   
+    const posts = await Post.find({ user: req.params.userId });
+
+    res.json({ user, posts });
+  } catch (error) {
+    if (res.statusCode === 404) {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
