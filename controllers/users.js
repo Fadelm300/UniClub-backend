@@ -5,6 +5,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
+const verifyToken = require('../middleware/verify-token.js');
+
+
 router.post('/signup', async (req, res) => {
   try {
     // Check if the username is already taken
@@ -39,6 +42,31 @@ router.post('/signin', async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
+});
+
+router.put('/follow/:followid',verifyToken, async (req, res) => {
+  try {
+    const followedUser = await User.findById(req.params.followid);
+    const UserUser = await User.findById(req.user.id);
+    let follow =true;
+      // unfollow
+      if(followedUser.followers.includes(req.user.id)){
+        followedUser.followers.pop(req.user.id);
+        UserUser.following.pop(req.params.followid);
+        follow = false;
+      // follow
+      }else{
+        followedUser.followers.push(req.user.id);
+        UserUser.following.push(req.params.followid);
+
+      }
+    followedUser.save();
+    UserUser.save();
+    res.status(201).send(follow);
+  } catch (error) {
+        res.status(400).json({ error: error.message });
+  }
+
 });
 
 

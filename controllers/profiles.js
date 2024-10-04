@@ -69,5 +69,29 @@ router.delete('/:userId', verifyToken, async (req, res) => {
   }
 });
 
+router.get('/other/:userId', verifyToken, async (req, res) => {
+  try {
+   
+    
+
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      res.status(404);
+      throw new Error('Profile not found.');
+    }
+
+   
+    const posts = await Post.find({ user: req.params.userId });
+
+    res.json({ user, posts });
+  } catch (error) {
+    if (res.statusCode === 404) {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
 
 module.exports = router;
