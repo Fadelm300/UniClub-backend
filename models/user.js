@@ -21,6 +21,9 @@ const userSchema = new mongoose.Schema({
   admin:{
     type: Boolean
   },
+  image: {
+        type: String,
+      },
   following:
     [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
   ,
