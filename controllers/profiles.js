@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/user');
 const Post = require('../models/post');
 const verifyToken = require('../middleware/verify-token');
-
+// const jwt = require('jsonwebtoken');
 router.get('/:userId', verifyToken, async (req, res) => {
   try {
    
@@ -41,13 +41,15 @@ router.put('/:userId', verifyToken, async (req, res) => {
       username: req.body.username,
       phone: req.body.phone,
       email: req.body.email,
+      image: req.body.image,
     }, { new: true });
 
     if (!updatedUser) {
       res.status(404);
       throw new Error('Profile not found.');
     }
-
+    // const token = jwt.sign({ username: user.username, id: user._id , admin:user.admin ,image:user.image}, process.env.JWT_SECRET);
+    // res.status(200).json({ token });
     res.json({ user: updatedUser });
   } catch (error) {
     res.status(500).json({ error: error.message });

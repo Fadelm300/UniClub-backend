@@ -20,6 +20,7 @@ router.post('/signup', async (req, res) => {
       username: req.body.username,
       phone: req.body.phone,
       email: req.body.email,
+      image: req.body.image,
       hashedPassword: bcrypt.hashSync(req.body.password, parseInt(process.env.SALT_LENGTH)),
       admin:false,
     });
@@ -34,7 +35,7 @@ router.post('/signin', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.body.username });
     if (user && bcrypt.compareSync(req.body.password, user.hashedPassword)) {
-      const token = jwt.sign({ username: user.username, id: user._id , admin:user.admin }, process.env.JWT_SECRET);
+      const token = jwt.sign({ username: user.username, id: user._id , admin:user.admin ,image:user.image}, process.env.JWT_SECRET);
       res.status(200).json({ token });
     } else {
       res.status(401).json({ error: 'Invalid username or password.' });

@@ -41,7 +41,7 @@ app.use('/event', EventRouter )
 
 
 
-app.post("/upload", async (req, res) => {
+app.post("/uploadImg", async (req, res) => {
   uploadImage(req.body.image)
   
     .then((url) => {
