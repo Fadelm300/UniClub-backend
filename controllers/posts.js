@@ -2,6 +2,7 @@ const express = require('express');
 const verifyToken = require('../middleware/verify-token.js');
 const Post = require('../models/post.js');
 const Channel = require('../models/channel.js');
+const User = require('../models/user.js');
 
 const router = express.Router();
 
@@ -54,7 +55,7 @@ router.post('/*', async (req, res) => {
 });
 
 // Update a post
-router.put('/*/:postId', async (req, res) => {
+router.put('/:postId', async (req, res) => {
   try {
     const postId = req.params.postId;
     const channelPath = req.params[0];
@@ -131,6 +132,39 @@ router.post('comments/*/:postId', async (req, res) => {
     res.status(201).json(newComment);
   } catch (error) {
     console.error('Error adding comment:', error);
+    res.status(500).json(error);
+  }
+});
+
+router.put('/like/:postId', async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const channelPath = req.params[0];
+
+    const post = await Post.findById(postId);
+    const user = await User.findById(req.user.id);
+
+
+    if (!post) {
+      return res.status(404).send("Post not found");
+    }
+    if(post.likes.includes(req.user.id)){
+      post.likes.pop(req.user.id);
+      user.likes.pop(req.params.postId);
+      follow = false;
+    // follow
+    }else{
+      post.likes.push(req.user.id);
+      user.likes.push(req.params.postId);
+
+    }
+    
+    await post.save();
+
+    res.status(200).send(post.likes.includes(req.user.id));
+    // res.status(200).json(`${post},${user}`);
+  } catch (error) {
+    console.error('Error updating post:', error);
     res.status(500).json(error);
   }
 });

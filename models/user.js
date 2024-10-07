@@ -28,7 +28,10 @@ const userSchema = new mongoose.Schema({
     [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
   ,
   followers:
-    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
+    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
+
+  likes:
+    [{type: mongoose.Schema.Types.ObjectId, ref: 'Post'}||{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}]
   
 });
 

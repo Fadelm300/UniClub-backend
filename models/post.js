@@ -6,7 +6,8 @@ const commentSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true }
 );
@@ -27,6 +28,7 @@ const postSchema = new mongoose.Schema(
       type: String,
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     comments: [commentSchema]
   },
   { timestamps: true }
