@@ -15,14 +15,16 @@ router.get('/*/:fileId', async (req, res) => {
     const fileId = req.params.fileId;
 
     const channelPath = req.params[0];
-    const channel = await Channel.findOne({ path: channelPath }).populate('files');
+    const file = await File.findById(fileId).populate({
+      path: "user",
+      select: "username _id",
+      model: "User"
+    });
     
-    const file = channel.files.find(p => p._id.toString() == fileId);
 
     if (!file) {
       return res.status(400).send("file not found in channel")
     }
-    
     res.status(200).json(file);
   } catch (error) {
     res.status(500).json(error);
@@ -97,33 +99,27 @@ router.delete('/*/:fileId', async (req, res) => {
     const fileId = req.params.fileId;
 
     const channelPath = req.params[0];
+
+
+    if (req.user.id !== req.params.userId && !(req.params.userId.admin)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
     const channel = await Channel.findOne({ path: channelPath }).populate(
       "files"
     );
-
+    if (user)
     if (!channel) {
       throw new Error("Channel not found");
     }
 
-    const fileIndex = channel.files.findIndex(
-      (file) => file._id.toString() === fileId
-    );
+    const file = await File.findByIdAndDelete(fileId);
+    channel.files.pop(file._id);
+    channel.save();
+    console.log(channel)
 
 
-    if (fileIndex === -1) {
-      throw new Error("File not found");
-    }
 
-    const file = await File.findByIdAndDelete(req.params.fileId);
-
-
-    res.status(200).json(channel.files[fileIndex]);
-
-    channel.files.splice(fileIndex, 1);
-
-
-    await channel.save();
-
+    res.status(200).json(file);
   } catch (error) {
     res.status(500).json(error);
   }
