@@ -10,8 +10,10 @@ router.get('/users',verifyToken, async (req, res) => {
 
         const page = 1; // You can change this dynamically based on the request
         const limit = 20;
-        const users = await User.find().skip((page - 1) * limit).limit(limit);
-      res.json(users);
+        const users = await User.find({ _id: { $ne: req.user.id } }).skip((page - 1) * limit).limit(limit);
+        console.log(users)
+        
+        res.json(users);
 
     } catch (error) {
       if (res.statusCode === 404) {
