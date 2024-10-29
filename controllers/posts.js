@@ -139,7 +139,6 @@ router.post('comments/*/:postId', async (req, res) => {
 router.put('/like/:postId', async (req, res) => {
   try {
     const postId = req.params.postId;
-    const channelPath = req.params[0];
 
     const post = await Post.findById(postId);
     const user = await User.findById(req.user.id);
@@ -150,15 +149,49 @@ router.put('/like/:postId', async (req, res) => {
     }
     if(post.likes.includes(req.user.id)){
       post.likes.pop(req.user.id);
-      user.likes.pop(req.params.postId);
+      user.likedPosts.pop(req.params.postId);
       follow = false;
     // follow
     }else{
       post.likes.push(req.user.id);
-      user.likes.push(req.params.postId);
+      user.likedPosts.push(req.params.postId);
 
     }
     
+    await post.save();
+
+    res.status(200).send(post.likes.includes(req.user.id));
+    // res.status(200).json(`${post},${user}`);
+  } catch (error) {
+    console.error('Error updating post:', error);
+    res.status(500).json(error);
+  }
+});
+
+router.put('/like/:postId/:commentId', async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const commentId = req.params.commentId;
+
+    const post = await Post.findById(postId);
+    const user = await User.findById(req.user.id);
+
+
+    if (!post) {
+      return res.status(404).send("Post not found");
+    }
+    const comment = post.comments.find(comm => comm._id == commentId)
+    console.log(comment)
+    if(comment.likes.includes(req.user.id)){
+      comment.likes.pop(req.user.id);
+      user.likedComments.pop(req.params.postId);
+      follow = false;
+    // follow
+    }else{
+      comment.likes.push(req.user.id);
+      user.likedPosts.push(req.params.postId);
+
+    }
     await post.save();
 
     res.status(200).send(post.likes.includes(req.user.id));
