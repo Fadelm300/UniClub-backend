@@ -92,38 +92,39 @@ router.put('/*/:fileId', async (req, res) => {
 
 
 // delet the file 
-
 router.delete('/*/:fileId', async (req, res) => {
   try {
-
     const fileId = req.params.fileId;
+    const channelPath = req.params[0];  
 
-    const channelPath = req.params[0];
-
-
-    if (req.user.id !== req.params.userId && !(req.params.userId.admin)) {
+    // Check if the user is authorized
+    if (req.user.id !== req.body.userId && !req.user.admin) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    const channel = await Channel.findOne({ path: channelPath }).populate(
-      "files"
-    );
-    if (user)
+
+ 
+    const channel = await Channel.findOne({ path: channelPath }).populate("files");
     if (!channel) {
       throw new Error("Channel not found");
     }
 
+   
     const file = await File.findByIdAndDelete(fileId);
-    channel.files.pop(file._id);
-    channel.save();
-    console.log(channel)
+    if (!file) {
+      throw new Error("File not found");
+    }
 
-
+    channel.files = channel.files.filter(f => f.toString() !== file._id.toString());
+    await channel.save();
 
     res.status(200).json(file);
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Error:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
+
+
 
 
 
