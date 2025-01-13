@@ -28,6 +28,7 @@ app.use(morgan('dev'))
 app.use(cors());
 app.use(express.json());
 
+const Channel = require("./models/channel.js");
 // Routes go here
 app.use('/test-jwt', testJWTRouter);
 app.use('/users', usersRouter);
@@ -40,7 +41,17 @@ app.use('/admin' , adminRouter)
 app.use('/event', EventRouter )
 
 
-
+app.get("/base", async (req, res) => {
+    try {
+      const channels = await Channel.find({
+        path: { $not: /\/+/ } // Matches paths that do not contain a '/'
+      });// Fetch all channels from the database
+      res.status(200).json(channels); // Return the channels in the response
+    } catch (error) {
+      console.error("Error fetching channels:", error);
+    }
+  });
+  
 app.post("/uploadImg", async (req, res) => {
   uploadImage(req.body.image)
   

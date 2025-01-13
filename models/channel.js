@@ -15,6 +15,7 @@ const channelSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    
     posts:[{type: mongoose.Schema.Types.ObjectId, ref: 'Post'}],
     moderator: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     subchannels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Channel' }],

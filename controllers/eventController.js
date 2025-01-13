@@ -2,7 +2,6 @@ const express = require('express');
 const Event = require('../models/Event');
 const verifyToken = require('../middleware/verify-token.js'); // assuming this middleware is for authentication/authorization
 const router = express.Router();
-
 // Get all events
 router.get('/', async (req, res) => {
     try {
@@ -64,5 +63,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
+
+
 
 module.exports = router;
