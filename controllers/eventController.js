@@ -1,8 +1,8 @@
 const express = require('express');
 const Event = require('../models/Event');
-const verifyToken = require('../middleware/verify-token.js'); // assuming this middleware is for authentication/authorization
+const verifyToken = require('../middleware/verify-token.js'); 
 const router = express.Router();
-// Get all events
+
 router.get('/', async (req, res) => {
     try {
         const events = await Event.find();
@@ -21,7 +21,7 @@ router.get('/:eventid', async (req, res) => {
     }
 });
 
-// Add a new event (protected route)
+
 router.post('/', verifyToken, async (req, res) => {
     const { title, description, date, time, location, image } = req.body;
     const newEvent = new Event({ title, description, date, time, location, image });
@@ -34,7 +34,7 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// Edit an event (protected route)
+
 router.put('/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
 
@@ -49,7 +49,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
 });
 
-// Delete an event (protected route)
+// Delete event 
 router.delete('/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
 

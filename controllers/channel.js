@@ -2,7 +2,7 @@ const express = require("express");
 const verifyToken = require("../middleware/verify-token.js");
 const Channel = require("../models/channel.js");
 const router = express.Router();
-
+const Post = require('../models/post');
 router.get("/*", async (req, res) => {
   try {
     const channelPath = req.params[0];
@@ -32,47 +32,11 @@ router.get("/*", async (req, res) => {
 });
 
 
-// router.post("/*", verifyToken, async (req, res) => {
-//   try {
-//     const parantPath = req.params[0] || "";
-//     const regex = /^[a-z0-9]+$/;
-//     req.body.name = req.body.name.trim();
-//     if (regex.test(req.body.name)) {
-//       const channelPath = parantPath + `/${req.body.name}`;
-//       // const channelPath = req.body.name;
-//       req.body.path = channelPath;
-//     } else {
-//       return res
-//         .status(200)
-//         .json(
-//           `${req.body.name} is not a valid name channel has to be lower case and no spaces only letters and numbers`
-//         );
-//     }
 
-//     req.body.moderator = req.user.id;
-
-//     const parantChannel = await Channel.findOne({ path: parantPath });
-//     const findChannel = await Channel.findOne({ path: req.body.path });
-
-//     if (!findChannel) {
-//       const channel = await Channel.create(req.body);
-//       parantChannel.subchannels.push(channel._id);
-//       await parantChannel.save();
-//       res.status(200).json(channel);
-//     } else {
-//       res
-//         .status(200)
-//         .json(`this channel already exists in ${parantChannel.name}`);
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json(error);
-//   }
-// });
 router.post("/*", verifyToken, async (req, res) => {
   try {
-    const parentPath = req.params[0] || ""; // Allow for root-level creation if no parent path
-    const regex = /^[a-z0-9]+$/; // Validate channel name
+    const parentPath = req.params[0] || "";
+    const regex = /^[a-z0-9]+$/; 
 
     req.body.name = req.body.name.trim();
     if (regex.test(req.body.name)) {
@@ -84,7 +48,7 @@ router.post("/*", verifyToken, async (req, res) => {
       });
     }
 
-    req.body.moderator = req.user.id; // Assign the moderator to the current user
+    req.body.moderator = req.user.id; 
 
     const parentChannel = parentPath
       ? await Channel.findOne({ path: parentPath })
@@ -113,36 +77,51 @@ router.post("/*", verifyToken, async (req, res) => {
 });
 
 
-router.delete("/*", verifyToken, async (req, res) => {
+
+
+
+
+
+
+const deleteChannelAndSubchannels = async (channel) => {
+  // Delete all subchannels recursively
+  for (let subchannel of channel.subchannels) {
+    const subchannelDoc = await Channel.findById(subchannel);
+    if (subchannelDoc) {
+      await deleteChannelAndSubchannels(subchannelDoc);  // Recursive delete for subchannels
+    }
+  }
+
+  // Delete all posts in the channel
+  await Post.deleteMany({ _id: { $in: channel.posts } });
+
+  // Finally, delete the channel itself
+  await Channel.findByIdAndDelete(channel._id);
+};
+
+// Route to delete a channel and its subchannels/posts
+router.delete('/:channelPath', async (req, res) => {
+  const { channelPath } = req.params;
+
   try {
-    const channelPath = req.params[0];
-    const channel = await Channel.findOne({ path: channelPath });
+    // Find the root channel and populate related fields
+    const channel = await Channel.findOne({ path: channelPath })
+      .populate('subchannels posts'); // Ensure subchannels and posts are populated
 
     if (!channel) {
-      return res.status(404).json({ error: "Channel not found." });
+      return res.status(404).json({ message: 'Channel not found' });
     }
 
-    if (req.user.id !== channel.moderator.toString()) {
-      return res.status(403).json({ error: "You are not authorized to delete this channel." });
-    }
+    // Recursively delete the channel and all its subchannels and posts
+    await deleteChannelAndSubchannels(channel);
 
-    await channel.remove(); // Remove the channel
-    res.status(200).json({ message: "Channel deleted successfully." });
+    res.status(200).json({ message: 'Channel and all related subchannels/posts deleted successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error('Error deleting channel and its subchannels/posts:', error);
+    res.status(500).json({ message: 'Failed to delete channel and its subchannels/posts' });
   }
 });
 
 
-
-
-
-// router.delete("/*", verifyToken, async (req,res)=>{
-//     const channel = await Channel.findOne({ path: channelPath });
-//     if(req.user._id == channel.moderator){
-
-//     }
-// });
 
 module.exports = router;
