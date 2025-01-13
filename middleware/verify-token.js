@@ -7,6 +7,7 @@ function verifyToken(req, res, next) {
     // Assign decoded payload to req.user
     req.user = decoded;
     // Call next() to invoke the next middleware function
+     req.user = decoded;
     next();
   } catch (error) {
     // If any errors, send back a 401 status and an 'Invalid token.' error message

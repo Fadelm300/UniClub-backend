@@ -5,21 +5,18 @@ cloudinary.config({
   api_key: process.env.API_KEY,
   api_secret: process.env.API_SECRET,
 });
-
 const opts = {
   overwrite: true,
-  resource_type: "auto",
+  resource_type: "auto", // Allow any type of file (images, documents, etc.)
   invalidate: true,
 };
 
-module.exports = (image) => {
+module.exports = (file) => {
   return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload(image, opts, (error, result) => {
+    cloudinary.uploader.upload(file, opts, (error, result) => {
       if (result && result.secure_url) {
-        console.log(result.secure_url);
         return resolve(result.secure_url);
       }
-      console.log(error.message);
       return reject({ message: error.message });
     });
   });

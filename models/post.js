@@ -4,7 +4,7 @@ const commentSchema = new mongoose.Schema(
   {
     text: {
       type: String,
-      required: true
+      required: true,
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
@@ -19,7 +19,10 @@ const postSchema = new mongoose.Schema(
       required: true,
     },
     image: {
-      type: String,
+      type: String, // Stores image URL
+    },
+    file: {
+      type: String, // Stores file URL
     },
     category: {
       type: String,
@@ -29,7 +32,7 @@ const postSchema = new mongoose.Schema(
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    comments: [commentSchema]
+    comments: [commentSchema],
   },
   { timestamps: true }
 );
