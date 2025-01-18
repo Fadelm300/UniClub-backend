@@ -74,8 +74,9 @@ router.post('/verify', async (req, res) => {
         await TEMPUSER.findByIdAndDelete(tempUser._id);
         res.status(201).json({ user, token });
       }
-    }
+    }else{
       res.status(401).json({error : 'Invalid OTP'});
+    }
   }catch(error){
     res.status(400).json({ error: error.message });
   }
@@ -84,7 +85,7 @@ router.post('/verify', async (req, res) => {
 
 router.post('/resendotp', async (req, res) => {
   try {
-    const tempUser = await TEMPUSER.findOne({ username: req.body.username });
+    const tempUser = await TEMPUSER.findOne({ email: req.body.email });
     const randomNumber=Math.floor(100000 + Math.random() * 900000);
     tempUser.otp=randomNumber;
     tempUser.save();
@@ -154,7 +155,7 @@ router.post('/resetpasswordstep1', async (req, res)=>{
         } catch (error) {
           console.log('deleted already');
         }
-      }, 3 * 60 * 1000);
+      }, 5 * 60 * 1000);
 
       setTimeout(async () => {
         try {
@@ -181,7 +182,8 @@ router.post('/resetpasswordstep2', async (req, res)=>{
     const tempUser = await TEMPUSER.findOne({ email:email});
     if(tempUser?.otp){
       if(tempUser.otp == enteredOtp){
-
+        tempUser.reset = true;
+        tempUser.save();
         res.status(201).json({ message: 'otp verified' });
       }else{
         res.status(401).json({error : 'Invalid OTP'});
@@ -200,7 +202,8 @@ router.post('/resetpasswordstep3', async (req, res)=>{
     const email = req.body.email;
     const password = req.body.password;
     const user = await User.findOne({ email: email });
-    if(user){
+    const tempUser = await TEMPUSER .findOne({email :email});
+    if(user && tempUser?.reset){
       user.hashedPassword = bcrypt.hashSync(password, parseInt(process.env.SALT_LENGTH));
       user.save();
       res.status(201).json({ message: 'password changed' });

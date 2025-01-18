@@ -20,6 +20,9 @@ const tempuserSchema = new mongoose.Schema({
   admin:{
     type: Boolean
   },
+  reset:{
+    type: Boolean
+  },
 });
 
 module.exports = mongoose.model('tempUSER', tempuserSchema);
