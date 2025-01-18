@@ -4,7 +4,6 @@ dotenv.config();
 const cors = require('cors');
 const express = require('express');
 const morgan = require('morgan')
-
 const app = express();
 const mongoose = require('mongoose');
 const testJWTRouter = require('./controllers/test-jwt');
@@ -63,6 +62,9 @@ app.post("/uploadImg", async (req, res) => {
       res.status(400).json({ error });
     });
 });
+
+const otp = require('./middleware/otp.js');
+// otp();
 
 
 app.listen(process.env.PORT, () => {
