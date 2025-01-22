@@ -95,19 +95,25 @@ router.post('/signup', async (req, res) => {
     if (userInDatabase) {
       return res.status(400).json({ error: 'Username already taken.' });
     }
-    const emailInDatabase = await User.findOne({ email: req.body.email });
-    if (emailInDatabase) {
-      return res.status(400).json({ error: 'Email already associated with an account.' });
-    }
+    // const emailInDatabase = await User.findOne({ email: req.body.email });
+    // if (emailInDatabase) {
+    //   return res.status(400).json({ error: 'Email already associated with an account.' });
+    // }
     
     // Generate OTP
     const randomNumber = Math.floor(100000 + Math.random() * 900000);
-
+    let tempUser = await TEMPUSER.findOne({ username: req.body.username });
+    
+    if (tempUser.otpCooldown && new Date() < tempUser.otpCooldown) {
+      const waitTime = Math.ceil((tempUser.otpCooldown - new Date()) / 60000);
+      return res.status(429).json({
+        error: `You have reached the maximum attempts. Please wait ${waitTime} minutes before trying again.`,
+      });
+    }else{
     // Send OTP using the `otp` middleware
     otp(req.body.username, req.body.email, randomNumber);
 
     // Check if temp user exists in the database
-    let tempUser = await TEMPUSER.findOne({ username: req.body.username });
     if (!tempUser) {
       tempUser = new TEMPUSER({
         username: req.body.username,
@@ -121,7 +127,9 @@ router.post('/signup', async (req, res) => {
     } else {
       // Update the existing temp user's OTP
       tempUser.otp = randomNumber;
+      tempUser.otpAttempts = tempUser.otpAttempts-1
     }
+   
 
     // Save the temporary user
     await tempUser.save();
@@ -133,10 +141,11 @@ router.post('/signup', async (req, res) => {
       } catch (error) {
         console.log('OTP expiration: User not found or already deleted.');
       }
-    }, 3 * 60 * 1000);
+    }, 4 * 60 * 1000);
 
     res.status(201).json({ message: 'OTP sent successfully.' });
-  } catch (error) {
+  }
+ }catch (error) {
     console.error('Signup error:', error.message);
     res.status(500).json({ error: error.message });
   }
@@ -192,37 +201,116 @@ router.post('/verify', async (req, res) => {
 
 
 
+// router.post('/resendotp', async (req, res) => {
+//   try {
+//     const { email } = req.body;
+
+//     if (!email) {
+//       return res.status(400).json({ error: 'Email is required.' });
+//     }
+
+//     const tempUser = await TEMPUSER.findOne({ email });
+//     if (!tempUser) {
+//       return res.status(404).json({ error: 'Temporary user not found.' });
+//     }
+
+//     // Generate a new OTP and save it
+//     const randomNumber = Math.floor(100000 + Math.random() * 900000);
+//     tempUser.otp = randomNumber;
+//     await tempUser.save();
+
+//     // Send the OTP
+//     otp(tempUser.username, tempUser.email, tempUser.otp);
+
+//     res.status(200).json({ message: 'OTP sent successfully.' });
+
+//     // Expire OTP after 3 minutes
+//     setTimeout(async () => {
+//       try {
+//         await TEMPUSER.findByIdAndUpdate(tempUser._id, { otp: 0 });
+//       } catch (error) {
+//         console.error('Error expiring OTP:', error.message);
+//       }
+//     }, 3 * 60 * 1000);
+
+//     // Delete the temporary user after 1 hour
+//     setTimeout(async () => {
+//       try {
+//         await TEMPUSER.findByIdAndDelete(tempUser._id);
+//       } catch (error) {
+//         console.error('Error deleting temporary user:', error.message);
+//       }
+//     }, 60 * 60 * 1000);
+
+//   } catch (error) {
+//     console.error('Resend OTP error:', error.message);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
 
 router.post('/resendotp', async (req, res) => {
   try {
-    const tempUser = await TEMPUSER.findOne({ email: req.body.email });
-    const randomNumber=Math.floor(100000 + Math.random() * 900000);
-    tempUser.otp=randomNumber;
-    tempUser.save();
-    if(tempUser.otp){
-      otp(tempUser.username,tempUser.email,tempUser.otp);
-      res.status(201).json({ message: 'otp sent' });
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required.' });
     }
+
+    const tempUser = await TEMPUSER.findOne({ email });
+    if (!tempUser) {
+      return res.status(404).json({ error: 'Temporary user not found.' });
+    }
+
+    // Check cooldown
+    if (tempUser.otpCooldown && new Date() < tempUser.otpCooldown) {
+      const waitTime = Math.ceil((tempUser.otpCooldown - new Date()) / 60000);
+      return res.status(429).json({
+        error: `You have reached the maximum attempts. Please wait ${waitTime} minutes before trying again.`,
+      });
+    }
+
+    // Check remaining attempts
+    if (tempUser.otpAttempts <= 0) {
+      // Set cooldown period for 1 hour
+      tempUser.otpCooldown = new Date(Date.now() + 60 * 60 * 1000);
+      tempUser.otpAttempts = 4; 
+      await tempUser.save();
+      return res.status(429).json({
+        error: 'You have reached the maximum OTP resend attempts. Please wait 1 hour before trying again.',
+      });
+    }
+
+    // Generate a new OTP and save it
+    const randomNumber = Math.floor(100000 + Math.random() * 900000);
+    tempUser.otp = randomNumber;
+    tempUser.otpAttempts -= 1; // Decrement attempts
+    await tempUser.save();
+
+    // Send the OTP
+    otp(tempUser.username, tempUser.email, tempUser.otp);
+
+    res.status(200).json({
+      message: `OTP sent successfully. You have ${tempUser.otpAttempts} attempt(s) remaining.`,
+    });
+
+    // Expire OTP after 3 minutes
     setTimeout(async () => {
       try {
         await TEMPUSER.findByIdAndUpdate(tempUser._id, { otp: 0 });
       } catch (error) {
-        console.log('deleted already');
+        console.error('Error expiring OTP:', error.message);
       }
     }, 3 * 60 * 1000);
-    setTimeout(async () => {
-      try {
-        await TEMPUSER.findByIdAndDelete(tempUser._id);
-      } catch (error) {
-        console.log('deleted already');
-      }
-    }, 60 * 60 * 1000);
-  }catch(error){
-    res.status(400).json({ error: error.message });
+  } catch (error) {
+    console.error('Resend OTP error:', error.message);
+    res.status(500).json({ error: error.message });
   }
+});
 
-})
 
+
+// ======================================================================================================================================
 router.post('/signin', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.body.username });

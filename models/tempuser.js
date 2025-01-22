@@ -23,6 +23,14 @@ const tempuserSchema = new mongoose.Schema({
   reset:{
     type: Boolean
   },
+  otpAttempts: {
+    type: Number,
+    default: 4, 
+  },
+  otpCooldown: {
+    type: Date, 
+    default: null,
+  },
 });
 
 module.exports = mongoose.model('tempUSER', tempuserSchema);
