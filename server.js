@@ -63,8 +63,6 @@ app.post("/uploadImg", async (req, res) => {
     });
 });
 
-const otp = require('./middleware/otp.js');
-// otp();
 
 
 app.listen(process.env.PORT, () => {
