@@ -200,6 +200,9 @@ router.put('/like/:postId/:commentId', async (req, res) => {
     console.error('Error updating post:', error);
     res.status(500).json(error);
   }
-});
+}
+
+
+);
 
 module.exports = router;

@@ -32,7 +32,10 @@ const userSchema = new mongoose.Schema({
   likedPosts:
     [{type: mongoose.Schema.Types.ObjectId, ref: 'Post'}],
   likedComments:
-    [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}]
+    [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
+  
+  joinedChannels:
+  [{type: mongoose.Schema.Types.ObjectId, ref: 'Channel'}],
   
 });
 

@@ -445,6 +445,47 @@ router.put('/follow/:followid',verifyToken, async (req, res) => {
 
 });
 
+router.put('/togglechannel/:userId/:channelId', async (req, res) => {
+  try {
+    const { userId, channelId } = req.params;
+
+    // Find the user and channel
+    const user = await User.findById(userId);
+    const channel = await Channel.findById(channelId);
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    if (!channel) {
+      return res.status(404).send('Channel not found');
+    }
+
+    // Check if the user is already in the channel
+    if (user.joinedChannels.includes(channelId)) {
+      user.joinedChannels.pop(channelId);
+    await user.save();
+    }else{
+    // Add the channel to the user's joinedChannels
+    user.joinedChannels.push(channelId);
+    await user.save();
+    }
+    // Optionally, add the user to the channel's members (if your Channel model supports it)
+    if (!channel.members.includes(userId)) {
+      channel.members.push(userId);
+      await channel.save();
+    }else{
+      channel.members.pop(userId);
+      await channel.save();
+    }
+
+    res.status(200).send('User successfully joined the channel');
+  } catch (error) {
+    console.error('Error adding user to channel:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 
 module.exports = router;
