@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const TEMPUSER = require('../models/tempuser');
-
+const Channel = require("../models/channel.js");
 const verifyToken = require('../middleware/verify-token.js');
 const otp = require('../middleware/otp.js');
 const { set } = require('mongoose');
@@ -445,47 +445,45 @@ router.put('/follow/:followid',verifyToken, async (req, res) => {
 
 });
 
+
+
 router.put('/togglechannel/:userId/:channelId', async (req, res) => {
   try {
     const { userId, channelId } = req.params;
-
-    // Find the user and channel
     const user = await User.findById(userId);
     const channel = await Channel.findById(channelId);
 
     if (!user) {
-      return res.status(404).send('User not found');
+      return res.status(404).json({ error: 'User not found' });
     }
-
     if (!channel) {
-      return res.status(404).send('Channel not found');
+      return res.status(404).json({ error: 'Channel not found' });
     }
 
-    // Check if the user is already in the channel
+    // Toggle membership logic...
     if (user.joinedChannels.includes(channelId)) {
       user.joinedChannels.pop(channelId);
-    await user.save();
-    }else{
-    // Add the channel to the user's joinedChannels
-    user.joinedChannels.push(channelId);
-    await user.save();
+      await user.save();
+    } else {
+      user.joinedChannels.push(channelId);
+      await user.save();
     }
-    // Optionally, add the user to the channel's members (if your Channel model supports it)
-    if (!channel.members.includes(userId)) {
+
+    if (channel.members.includes(userId)) {
+channel.members.pop(userId);
+await channel.save();
+    } else {
       channel.members.push(userId);
       await channel.save();
-    }else{
-      channel.members.pop(userId);
-      await channel.save();
     }
 
-    res.status(200).send('User successfully joined the channel');
+    // Return a JSON response
+    return res.status(200).json({ message: 'User successfully toggled the channel membership' });
+
   } catch (error) {
-    console.error('Error adding user to channel:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error toggling membership:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-
 
 module.exports = router;
