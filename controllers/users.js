@@ -104,7 +104,7 @@ router.post('/signup', async (req, res) => {
     const randomNumber = Math.floor(100000 + Math.random() * 900000);
     let tempUser = await TEMPUSER.findOne({ username: req.body.username });
     
-    if (tempUser.otpCooldown && new Date() < tempUser.otpCooldown) {
+    if (tempUser?.otpCooldown && new Date() < tempUser?.otpCooldown) {
       const waitTime = Math.ceil((tempUser.otpCooldown - new Date()) / 60000);
       return res.status(429).json({
         error: `You have reached the maximum attempts. Please wait ${waitTime} minutes before trying again.`,
@@ -259,7 +259,7 @@ router.post('/resendotp', async (req, res) => {
 
     const tempUser = await TEMPUSER.findOne({ email });
     if (!tempUser) {
-      return res.status(404).json({ error: 'Temporary user not found.' });
+      return res.status(404).json({ error: 'period is finished signup again.' });
     }
 
     // Check cooldown
@@ -291,7 +291,11 @@ router.post('/resendotp', async (req, res) => {
     otp(tempUser.username, tempUser.email, tempUser.otp);
 
     res.status(200).json({
-      message: `OTP sent successfully. You have ${tempUser.otpAttempts} attempt(s) remaining.`,
+      message: tempUser.otpAttempts>1
+      ?
+      `OTP sent successfully. You have ${tempUser.otpAttempts} attempts remaining.`
+      :
+      `OTP sent successfully. You have ${tempUser.otpAttempts} attempt remaining.`,
     });
 
     // Expire OTP after 3 minutes
@@ -329,8 +333,8 @@ router.post('/resetpasswordstep1', async (req, res)=>{
   try{
     const username = req.body.username;
     const email = req.body.email;
-    const user = await User.findOne({ email: email });
-    const tempUser = await TEMPUSER.findOne({email:email});
+    const user = await User.findOne({ $or: [{ username: username }, { email: email }]});
+    const tempUser = await TEMPUSER.findOne({ $or: [{ username: username }, { email: email }] });
 
     if (user) {
       randomNumber=Math.floor(100000 + Math.random() * 900000);
@@ -338,11 +342,11 @@ router.post('/resetpasswordstep1', async (req, res)=>{
         otp(user.username,email,randomNumber);
         const tempUser = await TEMPUSER.create({
           username: user.username,
-          email: email,
+          email: user.email,
           otp:randomNumber
         })
       }else{
-        otp(user.username,email,randomNumber);
+        otp(user.username,user.email,randomNumber);
         tempUser.otp=randomNumber;
         tempUser.save();
       }
@@ -404,6 +408,7 @@ router.post('/resetpasswordstep3', async (req, res)=>{
     if(user && tempUser?.reset){
       user.hashedPassword = bcrypt.hashSync(password, parseInt(process.env.SALT_LENGTH));
       user.save();
+      await TEMPUSER.findByIdAndDelete(tempUser._id);
       res.status(201).json({ message: 'password changed' });
     }else{
       res.status(401).json({error : 'Invalid email'});
