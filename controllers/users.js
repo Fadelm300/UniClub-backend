@@ -446,6 +446,28 @@ router.put('/follow/:followid',verifyToken, async (req, res) => {
 });
 
 
+router.get('/:userId/followers', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).populate('followers', 'username image');
+    if (!user) return res.status(404).send('User not found');
+    res.status(200).json(user.followers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/:userId/following', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).populate('following', 'username image');
+    if (!user) return res.status(404).send('User not found');
+    res.status(200).json(user.following);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
 
 router.put('/togglechannel/:userId/:channelId', async (req, res) => {
   try {
@@ -485,5 +507,6 @@ await channel.save();
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 module.exports = router;
