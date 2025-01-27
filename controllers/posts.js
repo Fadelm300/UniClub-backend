@@ -200,9 +200,26 @@ router.put('/like/:postId/:commentId', async (req, res) => {
     console.error('Error updating post:', error);
     res.status(500).json(error);
   }
-}
+});
 
 
-);
+
+// Search posts by text or user
+router.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query; // Get the search query from the URL
+    const posts = await Post.find({
+      $or: [
+        { text: { $regex: query, $options: 'i' } }, // Case-insensitive text match
+        { path: { $regex: query, $options: 'i' } },
+      ]
+    }).populate([{ path: 'user', model: 'User' }]);
+
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error('Error searching posts:', error);
+    res.status(500).json(error);
+  }
+});
 
 module.exports = router;
