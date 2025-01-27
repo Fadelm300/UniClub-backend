@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const TEMPUSER = require('../models/tempuser');
-
+const Channel = require("../models/channel.js");
 const verifyToken = require('../middleware/verify-token.js');
 const otp = require('../middleware/otp.js');
 const { set } = require('mongoose');
@@ -445,6 +445,68 @@ router.put('/follow/:followid',verifyToken, async (req, res) => {
 
 });
 
+
+router.get('/:userId/followers', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).populate('followers', 'username image');
+    if (!user) return res.status(404).send('User not found');
+    res.status(200).json(user.followers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/:userId/following', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).populate('following', 'username image');
+    if (!user) return res.status(404).send('User not found');
+    res.status(200).json(user.following);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
+
+router.put('/togglechannel/:userId/:channelId', async (req, res) => {
+  try {
+    const { userId, channelId } = req.params;
+    const user = await User.findById(userId);
+    const channel = await Channel.findById(channelId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    if (!channel) {
+      return res.status(404).json({ error: 'Channel not found' });
+    }
+
+    // Toggle membership logic...
+    if (user.joinedChannels.includes(channelId)) {
+      user.joinedChannels.pop(channelId);
+      await user.save();
+    } else {
+      user.joinedChannels.push(channelId);
+      await user.save();
+    }
+
+    if (channel.members.includes(userId)) {
+channel.members.pop(userId);
+await channel.save();
+    } else {
+      channel.members.push(userId);
+      await channel.save();
+    }
+
+    // Return a JSON response
+    return res.status(200).json({ message: 'User successfully toggled the channel membership' });
+
+  } catch (error) {
+    console.error('Error toggling membership:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 module.exports = router;
