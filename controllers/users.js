@@ -251,13 +251,13 @@ router.post('/verify', async (req, res) => {
 
 router.post('/resendotp', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email , username } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required.' });
+    if (!email && !username) {
+      return res.status(400).json({ error: 'Email or username required.' });
     }
 
-    const tempUser = await TEMPUSER.findOne({ email });
+    const tempUser = await TEMPUSER.findOne({ $or: [{ username: username }, { email: email }]});
     if (!tempUser) {
       return res.status(404).json({ error: 'period is finished signup again.' });
     }
@@ -339,7 +339,7 @@ router.post('/resetpasswordstep1', async (req, res)=>{
     if (user) {
       randomNumber=Math.floor(100000 + Math.random() * 900000);
       if (!tempUser){
-        otp(user.username,email,randomNumber);
+        otp(user.username,user.email,randomNumber);
         const tempUser = await TEMPUSER.create({
           username: user.username,
           email: user.email,
@@ -380,8 +380,9 @@ router.post('/resetpasswordstep1', async (req, res)=>{
 router.post('/resetpasswordstep2', async (req, res)=>{
   try{
     const email = req.body.email;
+    const username = req.body.username;
     const enteredOtp = req.body.otp;
-    const tempUser = await TEMPUSER.findOne({ email:email});
+    const tempUser = await TEMPUSER.findOne({ $or: [{ username: username }, { email: email }]});
     if(tempUser?.otp){
       if(tempUser.otp == enteredOtp){
         tempUser.reset = true;
@@ -402,9 +403,10 @@ router.post('/resetpasswordstep2', async (req, res)=>{
 router.post('/resetpasswordstep3', async (req, res)=>{
   try{
     const email = req.body.email;
+    const username = req.body.username;
     const password = req.body.password;
-    const user = await User.findOne({ email: email });
-    const tempUser = await TEMPUSER .findOne({email :email});
+    const user = await User.findOne({ $or: [{ username: username }, { email: email }]});
+    const tempUser = await TEMPUSER .findOne({ $or: [{ username: username }, { email: email }]});
     if(user && tempUser?.reset){
       user.hashedPassword = bcrypt.hashSync(password, parseInt(process.env.SALT_LENGTH));
       user.save();
@@ -507,6 +509,38 @@ await channel.save();
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+router.get('/members/*', async (req, res) => {
+  try {
+    const channelPath = req.params[0];
+    const channel =  await Channel.findOne({ path: channelPath }).select("-posts -files ").populate(
+      { path: "members" }
+    );
+    return res.status(201).json(channel);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put('/togglemoderator/*' ,  async (req , res) => {
+  const userId = req.body.userId;
+  const channelPath = req.params[0];
+  const channel =  await Channel.findOne({ path: channelPath });
+
+  console.log(userId);
+  
+  if (channel.moderators.includes(userId)){
+      channel.moderators.pop(userId)
+      await channel.save();
+  }else{
+      channel.moderators.push(userId)
+      await channel.save();
+  }
+  res.json('ok');
+
+});
+
 
 
 module.exports = router;
