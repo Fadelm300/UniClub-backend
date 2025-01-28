@@ -524,6 +524,7 @@ router.get('/members/*', async (req, res) => {
 });
 
 router.put('/togglemoderator/*' ,  async (req , res) => {
+  try{
   const userId = req.body.userId;
   const channelPath = req.params[0];
   const channel =  await Channel.findOne({ path: channelPath });
@@ -537,7 +538,10 @@ router.put('/togglemoderator/*' ,  async (req , res) => {
       channel.moderators.push(userId)
       await channel.save();
   }
-  res.json('ok');
+  return res.status(201).json('ok');
+  }catch(error){
+    res.status(500).json({ error: error.message });
+  }
 
 });
 
