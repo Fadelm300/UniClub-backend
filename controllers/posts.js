@@ -3,8 +3,10 @@ const verifyToken = require('../middleware/verify-token.js');
 const Post = require('../models/post.js');
 const Channel = require('../models/channel.js');
 const User = require('../models/user.js');
-
+const multer = require("multer");
 const router = express.Router();
+const { uploadFile, deleteFile, getFileUrl } = require("../upload.js");
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ========== Public Routes ===========
 
@@ -34,12 +36,18 @@ router.get('/*/:postId', async (req, res) => {
 router.use(verifyToken);
 
 // Create a new post
-router.post('/*', async (req, res) => {
+router.post('/*' , upload.single('file'),async(req, res) => {
   try {
     const channelPath = req.params[0];
     req.body.path = channelPath;
     req.body.user = req.user.id;
-    console.log(req.body.image)
+    const file = req.file;
+    console.log(req.body)
+    if(file){
+      console.log(file)
+      const result = await uploadFile(file.buffer, file.originalname, file.mimetype);
+      req.body.link = result.url;
+    }
     const post = await Post.create(req.body);
     const channel = await Channel.findOne({ path: channelPath });
     channel.posts.push(post._id);
