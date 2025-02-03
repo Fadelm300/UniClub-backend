@@ -3,7 +3,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 const cors = require('cors');
 const express = require('express');
-const morgan = require('morgan')
+const morgan = require('morgan');
+const multer = require("multer");
 const app = express();
 const mongoose = require('mongoose');
 const testJWTRouter = require('./controllers/test-jwt');
@@ -14,10 +15,10 @@ const postsRouter = require('./controllers/posts.js');
 const channelRouter = require('./controllers/channel.js');
 const FileRouter = require ('./controllers/file.js');
 const commentRouter = require ('./controllers/comments.js');
-const adminRouter = require ('./controllers/admin.js')
+const adminRouter = require ('./controllers/admin.js');
 const EventRouter = require('./controllers/eventController');
 const uploadImage = require("./uploadImage.js");
-
+const { uploadFile, deleteFile, getFileUrl } = require("./upload.js");
 mongoose.connect(process.env.MONGODB_URI);
 
 mongoose.connection.on('connected', () => {
@@ -64,6 +65,25 @@ app.post("/uploadImg", async (req, res) => {
 });
 
 
+const upload = multer({ storage: multer.memoryStorage() });
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    const file = req.file;
+    const result = await uploadFile(file.buffer, file.originalname, file.mimetype);
+    res.json({ url: getFileUrl(file.originalname) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/delete/:filename", async (req, res) => {
+  try {
+    await deleteFile(req.params.filename);
+    res.json({ message: "File deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.listen(process.env.PORT, () => {
   console.log('The express app is ready!');
