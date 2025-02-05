@@ -13,18 +13,19 @@ const s3 = new S3Client({
 });
 
 
-const uploadFile = async (fileBuffer, fileName, mimeType) => {
-  const command = new PutObjectCommand({
-    Bucket: process.env.R2_BUCKET_NAME,
-    Key: fileName,
-    Body: fileBuffer,
-    ContentType: mimeType,
-    ACL: "public-read", // Optional: Make file public
-  });
+const uploadFile = async () => {
 
-  await s3.send(command);
-  return `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET_NAME}/${fileName}`;
-};
+  const key = crypto.randomUUID();
+  console.log(key);
+  const bucket = process.env.R2_BUCKET_NAME;
+
+  const url = await getSignedUrl(s3, new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  }), { expiresIn: 3600 });
+
+  return { url, key };
+}
 
 const deleteFile = async (fileName) => {
   try {

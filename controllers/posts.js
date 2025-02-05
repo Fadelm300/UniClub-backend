@@ -36,31 +36,37 @@ router.get('/*/:postId', async (req, res) => {
 router.use(verifyToken);
 
 // Create a new post
-router.post('/*' , upload.single('file'),async(req, res) => {
-  try {
-    const channelPath = req.params[0];
-    req.body.path = channelPath;
-    req.body.user = req.user.id;
-    const file = req.file;
-    console.log(req.body)
-    if(file){
-      console.log(file)
-      const result = await uploadFile(file.buffer, file.originalname, file.mimetype);
-      req.body.link = result.url;
-    }
-    const post = await Post.create(req.body);
-    const channel = await Channel.findOne({ path: channelPath });
-    channel.posts.push(post._id);
+router.post('/*' , async(req, res) => {
+      const result = await uploadFile();
+      res.status(201).json(result);
     
-    await channel.save();
-    
-    post._doc.user = req.user; // Attach user data to the post
-    res.status(201).json(post);
-  } catch (error) {
-    console.error('Error creating post:', error);
-    res.status(500).json(error);
-  }
 });
+
+// router.post('/*' , upload.single('file'),async(req, res) => {
+//   try {
+//     const channelPath = req.params[0];
+//     req.body.path = channelPath;
+//     req.body.user = req.user.id;
+//     const file = req.file;
+//     if(file){
+//       console.log(file)
+//       const result = await uploadFile(file.buffer, file.originalname, file.mimetype);
+//       console.log(result)
+//       req.body.link = result;
+//     }
+//     const post = await Post.create(req.body);
+//     const channel = await Channel.findOne({ path: channelPath });
+//     channel.posts.push(post._id);
+    
+//     await channel.save();
+    
+//     post._doc.user = req.user; // Attach user data to the post
+//     res.status(201).json(post);
+//   } catch (error) {
+//     console.error('Error creating post:', error);
+//     res.status(500).json(error);
+//   }
+// });
 
 // Update a post
 router.put('/:postId', async (req, res) => {
