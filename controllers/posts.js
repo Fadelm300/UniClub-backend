@@ -48,10 +48,11 @@ router.post('/*' ,async(req, res) => {
     const channelPath = req.params[0];
     req.body.path = channelPath;
     req.body.user = req.user.id;
+    console.table(req.body);
+
     const post = await Post.create(req.body);
     const channel = await Channel.findOne({ path: channelPath });
     channel.posts.push(post._id);
-    
     await channel.save();
     
     post._doc.user = req.user; // Attach user data to the post

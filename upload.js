@@ -22,9 +22,10 @@ const uploadFile = async () => {
   const url = await getSignedUrl(s3, new PutObjectCommand({
     Bucket: bucket,
     Key: key,
+    ACL: "public-read",
   }), { expiresIn: 3600 });
 
-  return { url, key };
+  return { publicUrl: `${process.env.R2_PUBLIC_URL}/${key}` , url, key };
 }
 
 const deleteFile = async (fileName) => {
@@ -43,8 +44,8 @@ const deleteFile = async (fileName) => {
   }
 };
 
-const getFileUrl = (fileName) => {
-  return `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET_NAME}/${fileName}`;
+const getFileUrl = async  (fileName) => {
+  const signedUrl = await getSignedUrl
 };
 
 module.exports = { uploadFile, deleteFile, getFileUrl };
