@@ -21,6 +21,9 @@ const postSchema = new mongoose.Schema(
     link: {
       type: String,
     },
+    file:{
+      type: mongoose.Schema.Types.ObjectId, ref: 'File'
+    },
     category: {
       type: String,
     },

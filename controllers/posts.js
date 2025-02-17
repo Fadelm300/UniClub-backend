@@ -3,6 +3,7 @@ const verifyToken = require('../middleware/verify-token.js');
 const Post = require('../models/post.js');
 const Channel = require('../models/channel.js');
 const User = require('../models/user.js');
+const File = require('../models/file.js');
 const multer = require("multer");
 const router = express.Router();
 const { uploadFile, deleteFile, getFileUrl } = require("../upload.js");
@@ -17,7 +18,8 @@ router.get('/*/:postId', async (req, res) => {
 
     const post = await Post.findById(postId).populate([
       { path: "user", model: "User" },
-      { path: "comments.user", model: "User" }
+      { path: "comments.user", model: "User" },
+      { path: "file", model: "File"} 
     ]);
     
     if (!post) {
@@ -48,15 +50,38 @@ router.post('/*' ,async(req, res) => {
     const channelPath = req.params[0];
     req.body.path = channelPath;
     req.body.user = req.user.id;
-    console.table(req.body);
+    if (req.body.link) {
+      const file = await File.create({
+        link: req.body.link,
+        user: req.user.id,
+        title: req.body.fileName,
+        description: req.body.description,
+        type: req.body.type
+      });
 
-    const post = await Post.create(req.body);
-    const channel = await Channel.findOne({ path: channelPath });
-    channel.posts.push(post._id);
-    await channel.save();
+      req.body.file = file._id;
+      const post = await Post.create(req.body);
+
+      file.post = post._id;
+      await file.save();
+
+      const channel = await Channel.findOne({ path: channelPath });
+      channel.posts.push(post._id);
+      channel.files.push(file._id);
+      await channel.save();
+    }else{
+      const post = await Post.create(req.body);
+      const channel = await Channel.findOne({ path: channelPath });
+      channel.posts.push(post._id);
+      await channel.save();
+    }
     
-    post._doc.user = req.user; // Attach user data to the post
-    res.status(201).json(post);
+
+    
+
+    
+    
+    res.status(201).json({message:'post created'});
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(500).json(error);
