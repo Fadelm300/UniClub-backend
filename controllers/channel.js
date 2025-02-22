@@ -14,7 +14,8 @@ router.get("/*", async (req, res) => {
         populate: {
           path: "user",
           model: "User"
-        }
+        },
+        populate: {path: "file", model: "File"}
       },
       {
         path: "files",
