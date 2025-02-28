@@ -11,11 +11,10 @@ router.get("/*", async (req, res) => {
       {
         path: "posts",
         model: "Post",
-        populate: {
-          path: "user",
-          model: "User"
-        },
-        populate: {path: "file", model: "File"}
+        populate: [
+          { path: "user", model: "User" },
+          { path: "file", model: "File" }
+        ]
       },
       {
         path: "files",

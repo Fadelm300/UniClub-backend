@@ -11,7 +11,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // ========== Public Routes ===========
 
-router.get('/*/:postId', async (req, res) => {
+router.get('getpost/*/:postId', async (req, res) => {
   try {
     const postId = req.params.postId;
     const channelPath = req.params[0];
@@ -36,6 +36,70 @@ router.get('/*/:postId', async (req, res) => {
 // ========== Protected Routes ==========
 
 router.use(verifyToken);
+
+
+
+
+
+
+// Report a post
+router.post('/report/:postId', async (req, res) => {
+  try {
+      const { postId } = req.params;
+      const { reason } = req.body; 
+      const userId = req.user.id; 
+
+      const post = await Post.findById(postId);
+      if (!post) return res.status(404).json({ message: 'Post not found' });
+
+      
+      if (post.report.some(report => report.user.toString() === userId)) {
+          return res.status(400).json({ message: 'You have already reported this post' });
+      }
+
+      console.log(postId + " " + reason)
+
+
+
+      post.report.push({ user: userId, reason });
+      await post.save();
+
+      res.status(200).json({ message: 'Report submitted successfully' });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
+
+// Get all reported posts for a specific channel (for moderators)
+router.get('/reported/*', async (req, res) => {
+  try {
+    const path = req.params[0];
+      console.log(path)
+      // Find the channel and get its posts
+      const channelData = await Channel.findOne({path:path}).populate('posts');
+      if (!channelData) {
+          return res.status(404).json({ message: 'Channel not found' });
+      }
+
+      // Filter reported posts within the channel
+      const reportedPosts = await Post.find({
+          _id: { $in: channelData.posts }, // Only posts that belong to the channel
+          "report.0": { $exists: true } // Ensure post has at least one report
+      })
+      .populate('user', 'username image') // Populate post owner details
+      .populate('report.user', 'username'); // Populate user who reported
+
+      if (reportedPosts.length === 0) {
+          return res.status(404).json({ message: 'No reported posts found in this channel' });
+      }
+
+      res.status(200).json(reportedPosts);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Create a new post
 router.post('/*/upload' , async(req, res) => {
