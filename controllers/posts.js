@@ -10,28 +10,27 @@ const { uploadFile, deleteFile, getFileUrl } = require("../upload.js");
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ========== Public Routes ===========
-
-router.get('getpost/*/:postId', async (req, res) => {
+router.get('/getpost/:path/:postId', async (req, res) => {
   try {
-    const postId = req.params.postId;
-    const channelPath = req.params[0];
+    const { path, postId } = req.params;
 
     const post = await Post.findById(postId).populate([
       { path: "user", model: "User" },
       { path: "comments.user", model: "User" },
       { path: "file", model: "File"} 
     ]);
-    
+
     if (!post) {
-      return res.status(404).send("Post not found in channel");
+      return res.status(404).json({ message: "Post not found in channel" });
     }
     
     res.status(200).json(post);
   } catch (error) {
     console.error('Error fetching post:', error);
-    res.status(500).json(error);
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 // ========== Protected Routes ==========
 
@@ -39,56 +38,67 @@ router.use(verifyToken);
 
 
 
-
-
-
-// Report a post
-router.post('/report/:postId', async (req, res) => {
+router.post("/report/:postId", async (req, res) => {
   try {
-      const { postId } = req.params;
-      const { reason } = req.body; 
-      const userId = req.user.id; 
+    const { postId } = req.params;
+    let { reason } = req.body;
+    const userId = req.user.id;
 
-      const post = await Post.findById(postId);
-      if (!post) return res.status(404).json({ message: 'Post not found' });
+    console.log("Received reason:", reason, "Type:", typeof reason); // Debugging 
 
-      
-      if (post.report.some(report => report.user.toString() === userId)) {
-          return res.status(400).json({ message: 'You have already reported this post' });
-      }
+    if (!reason) {
+      return res.status(400).json({ message: "Report reason is required" });
+    }
 
-      console.log(postId + " " + reason)
+    if (typeof reason !== "string") {
+      reason = JSON.stringify(reason);
+    }
 
+    console.log(`User ID: ${userId}, Post ID: ${postId}, Reason: ${reason}`);
 
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
 
-      post.report.push({ user: userId, reason });
-      await post.save();
+    if (!post.report) {
+      post.report = []; 
+    }
 
-      res.status(200).json({ message: 'Report submitted successfully' });
+    const alreadyReported = post.report.some((report) => report.user.toString() === userId);
+    if (alreadyReported) {
+      return res.status(400).json({ message: "You have already reported this post" });
+    }
+
+    post.report.push({ user: userId, reason });
+    await post.save();
+
+    res.status(200).json({ message: "Post reported successfully" });
   } catch (error) {
-      res.status(500).json({ error: error.message });
+    console.error("Error reporting post:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
 
-// Get all reported posts for a specific channel (for moderators)
+
+
+
 router.get('/reported/*', async (req, res) => {
   try {
     const path = req.params[0];
       console.log(path)
-      // Find the channel and get its posts
       const channelData = await Channel.findOne({path:path}).populate('posts');
       if (!channelData) {
           return res.status(404).json({ message: 'Channel not found' });
       }
 
-      // Filter reported posts within the channel
       const reportedPosts = await Post.find({
-          _id: { $in: channelData.posts }, // Only posts that belong to the channel
-          "report.0": { $exists: true } // Ensure post has at least one report
+          _id: { $in: channelData.posts }, 
+          "report.0": { $exists: true } 
       })
-      .populate('user', 'username image') // Populate post owner details
-      .populate('report.user', 'username'); // Populate user who reported
+      .populate('user', 'username image') 
+      .populate('report.user', 'username'); 
 
       if (reportedPosts.length === 0) {
           return res.status(404).json({ message: 'No reported posts found in this channel' });
@@ -100,8 +110,30 @@ router.get('/reported/*', async (req, res) => {
   }
 });
 
+router.delete('/report/:postId', async (req, res) => {
+  try {
+    const { postId } = req.params;
 
-// Create a new post
+    const post = await Post.findByIdAndDelete(postId); // Use findByIdAndDelete
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.status(200).json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+
+
+
+
+
+
+
 router.post('/*/upload' , async(req, res) => {
       const result = await uploadFile();
       res.status(201).json(result);
