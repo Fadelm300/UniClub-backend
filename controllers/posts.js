@@ -81,6 +81,27 @@ router.post("/report/:postId", async (req, res) => {
 });
 
 
+// router.delete("/reported/delete-all", async (req, res) => {
+//   try {
+//     // Find all reported posts
+//     const reportedPosts = await Post.find({ "report.0": { $exists: true } });
+
+//     if (!reportedPosts.length) {
+//       return res.status(404).json({ message: "No reported posts found" });
+//     }
+
+//     // Get post IDs
+//     const postIds = reportedPosts.map(post => post._id);
+
+//     // Delete the posts
+//     await Post.deleteMany({ _id: { $in: postIds } });
+
+//     res.status(200).json({ message: "All reported posts deleted successfully" });
+//   } catch (error) {
+//     console.error("Error deleting reported posts:", error);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// });
 
 
 
@@ -110,21 +131,100 @@ router.get('/reported/*', async (req, res) => {
   }
 });
 
-router.delete('/report/:postId', async (req, res) => {
+// Delete a single report from a post
+router.delete("/report/:postId", async (req, res) => {
   try {
     const { postId } = req.params;
+    const post = await Post.findById(postId);
 
-    const post = await Post.findByIdAndDelete(postId); // Use findByIdAndDelete
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
+    if (!post || !post.report.length) {
+      return res.status(404).json({ message: "No reports found on this post" });
     }
 
-    res.status(200).json({ message: 'Post deleted successfully' });
+    post.report.pop(); // Remove the latest report
+    await post.save();
+    res.status(200).json({ message: "Report deleted successfully" });
   } catch (error) {
-    console.error('Error deleting post:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error("Error deleting report:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+// Delete all reports from a post
+router.delete("/report/all/:postId", async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    post.report = []; // Clear all reports
+    await post.save();
+    res.status(200).json({ message: "All reports deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting all reports:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Delete a post by its ID (New function and route)
+router.delete('/deletepostrx7/:postId', async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const channelPath = req.params[0]; // Ensure you adjust based on your routing structure
+    const channel = await Channel.findOne({ path: channelPath }).populate("posts");
+
+    if (!channel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    const postIndex = channel.posts.findIndex(post => post._id.toString() === postId);
+    if (postIndex === -1) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const post = await Post.findByIdAndDelete(postId);
+    if (!post) {
+      return res.status(500).json({ message: "Post deletion failed" });
+    }
+
+    channel.posts.splice(postIndex, 1);
+    await channel.save();
+
+    res.status(200).json({ message: "Post deleted successfully", post });
+  } catch (error) {
+    console.error('Error deleting post (handleDeletePostrx7):', error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.delete('/deletepostrx7/:postId', async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const deletedPost = await Post.findByIdAndDelete(postId);
+
+    if (!deletedPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.status(200).json({ message: "Post deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
 
 
 
