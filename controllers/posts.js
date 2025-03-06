@@ -10,7 +10,7 @@ const { uploadFile, deleteFile, getFileUrl } = require("../upload.js");
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ========== Public Routes ===========
-router.get('/getpost/:path/:postId', async (req, res) => {
+router.get('/getpost/*/:postId', async (req, res) => {
   try {
     const { path, postId } = req.params;
 
@@ -81,27 +81,6 @@ router.post("/report/:postId", async (req, res) => {
 });
 
 
-// router.delete("/reported/delete-all", async (req, res) => {
-//   try {
-//     // Find all reported posts
-//     const reportedPosts = await Post.find({ "report.0": { $exists: true } });
-
-//     if (!reportedPosts.length) {
-//       return res.status(404).json({ message: "No reported posts found" });
-//     }
-
-//     // Get post IDs
-//     const postIds = reportedPosts.map(post => post._id);
-
-//     // Delete the posts
-//     await Post.deleteMany({ _id: { $in: postIds } });
-
-//     res.status(200).json({ message: "All reported posts deleted successfully" });
-//   } catch (error) {
-//     console.error("Error deleting reported posts:", error);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// });
 
 
 
@@ -165,53 +144,6 @@ router.delete("/report/all/:postId", async (req, res) => {
     res.status(200).json({ message: "All reports deleted successfully" });
   } catch (error) {
     console.error("Error deleting all reports:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-// Delete a post by its ID (New function and route)
-router.delete('/deletepostrx7/:postId', async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const channelPath = req.params[0]; // Ensure you adjust based on your routing structure
-    const channel = await Channel.findOne({ path: channelPath }).populate("posts");
-
-    if (!channel) {
-      return res.status(404).json({ message: "Channel not found" });
-    }
-
-    const postIndex = channel.posts.findIndex(post => post._id.toString() === postId);
-    if (postIndex === -1) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    const post = await Post.findByIdAndDelete(postId);
-    if (!post) {
-      return res.status(500).json({ message: "Post deletion failed" });
-    }
-
-    channel.posts.splice(postIndex, 1);
-    await channel.save();
-
-    res.status(200).json({ message: "Post deleted successfully", post });
-  } catch (error) {
-    console.error('Error deleting post (handleDeletePostrx7):', error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-router.delete('/deletepostrx7/:postId', async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const deletedPost = await Post.findByIdAndDelete(postId);
-
-    if (!deletedPost) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    res.status(200).json({ message: "Post deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting post:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

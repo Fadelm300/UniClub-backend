@@ -36,7 +36,7 @@ router.get("/*", async (req, res) => {
 router.post("/*", verifyToken, async (req, res) => {
   try {
     const parentPath = req.params[0] || "";
-    const regex = /^[a-z0-9]+$/; 
+    const regex = /^[a-z0-9-]+$/; 
 
     req.body.name = req.body.name.trim();
     if (regex.test(req.body.name)) {
