@@ -10,34 +10,162 @@ const { uploadFile, deleteFile, getFileUrl } = require("../upload.js");
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ========== Public Routes ===========
-
-router.get('/*/:postId', async (req, res) => {
+router.get('/getpost/*/:postId', async (req, res) => {
   try {
-    const postId = req.params.postId;
-    const channelPath = req.params[0];
+    const { path, postId } = req.params;
 
     const post = await Post.findById(postId).populate([
       { path: "user", model: "User" },
       { path: "comments.user", model: "User" },
       { path: "file", model: "File"} 
     ]);
-    
+
     if (!post) {
-      return res.status(404).send("Post not found in channel");
+      return res.status(404).json({ message: "Post not found in channel" });
     }
     
     res.status(200).json(post);
   } catch (error) {
     console.error('Error fetching post:', error);
-    res.status(500).json(error);
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 // ========== Protected Routes ==========
 
 router.use(verifyToken);
 
-// Create a new post
+
+
+router.post("/report/:postId", async (req, res) => {
+  try {
+    const { postId } = req.params;
+    let { reason } = req.body;
+    const userId = req.user.id;
+
+    console.log("Received reason:", reason, "Type:", typeof reason); // Debugging 
+
+    if (!reason) {
+      return res.status(400).json({ message: "Report reason is required" });
+    }
+
+    if (typeof reason !== "string") {
+      reason = JSON.stringify(reason);
+    }
+
+    console.log(`User ID: ${userId}, Post ID: ${postId}, Reason: ${reason}`);
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (!post.report) {
+      post.report = []; 
+    }
+
+    const alreadyReported = post.report.some((report) => report.user.toString() === userId);
+    if (alreadyReported) {
+      return res.status(400).json({ message: "You have already reported this post" });
+    }
+
+    post.report.push({ user: userId, reason });
+    await post.save();
+
+    res.status(200).json({ message: "Post reported successfully" });
+  } catch (error) {
+    console.error("Error reporting post:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
+
+
+
+router.get('/reported/*', async (req, res) => {
+  try {
+    const path = req.params[0];
+      console.log(path)
+      const channelData = await Channel.findOne({path:path}).populate('posts');
+      if (!channelData) {
+          return res.status(404).json({ message: 'Channel not found' });
+      }
+
+      const reportedPosts = await Post.find({
+          _id: { $in: channelData.posts }, 
+          "report.0": { $exists: true } 
+      })
+      .populate('user', 'username image') 
+      .populate('report.user', 'username'); 
+
+      if (reportedPosts.length === 0) {
+          return res.status(404).json({ message: 'No reported posts found in this channel' });
+      }
+
+      res.status(200).json(reportedPosts);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a single report from a post
+router.delete("/report/:postId", async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await Post.findById(postId);
+
+    if (!post || !post.report.length) {
+      return res.status(404).json({ message: "No reports found on this post" });
+    }
+
+    post.report.pop(); // Remove the latest report
+    await post.save();
+    res.status(200).json({ message: "Report deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting report:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Delete all reports from a post
+router.delete("/report/all/:postId", async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    post.report = []; // Clear all reports
+    await post.save();
+    res.status(200).json({ message: "All reports deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting all reports:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 router.post('/*/upload' , async(req, res) => {
       const result = await uploadFile();
       res.status(201).json(result);
