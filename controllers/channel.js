@@ -85,44 +85,46 @@ router.post("/*", verifyToken, async (req, res) => {
 
 
 const deleteChannelAndSubchannels = async (channel) => {
-  // Delete all subchannels recursively
   for (let subchannel of channel.subchannels) {
     const subchannelDoc = await Channel.findById(subchannel);
     if (subchannelDoc) {
-      await deleteChannelAndSubchannels(subchannelDoc);  // Recursive delete for subchannels
+      await deleteChannelAndSubchannels(subchannelDoc);  
     }
   }
 
-  // Delete all posts in the channel
   await Post.deleteMany({ _id: { $in: channel.posts } });
 
-  // Finally, delete the channel itself
   await Channel.findByIdAndDelete(channel._id);
 };
-
-// Route to delete a channel and its subchannels/posts
-router.delete('/:channelPath', async (req, res) => {
-  const { channelPath } = req.params;
-
+router.delete('/subchannel/:subchannelId', async (req, res) => {
   try {
-    // Find the root channel and populate related fields
-    const channel = await Channel.findOne({ path: channelPath })
-      .populate('subchannels posts'); // Ensure subchannels and posts are populated
+      const { subchannelId } = req.params;
+      const subchannel = await Channel.findById(subchannelId);
 
-    if (!channel) {
-      return res.status(404).json({ message: 'Channel not found' });
-    }
+      if (!subchannel) {
+          return res.status(404).json({ message: 'Subchannel not found' });
+      }
 
-    // Recursively delete the channel and all its subchannels and posts
-    await deleteChannelAndSubchannels(channel);
+      if (subchannel.path.includes("/")) {
+          const parentPath = subchannel.path.split('/').slice(0, -1).join('/');
+          const parentChannel = await Channel.findOne({ path: parentPath });
 
-    res.status(200).json({ message: 'Channel and all related subchannels/posts deleted successfully' });
+          if (parentChannel) {
+              parentChannel.subchannels = parentChannel.subchannels.filter(
+                  (id) => id.toString() !== subchannelId
+              );
+              await parentChannel.save();
+          }
+      }
+
+      await Channel.findByIdAndDelete(subchannelId);
+
+      res.status(200).json({ message: 'Subchannel deleted successfully' });
   } catch (error) {
-    console.error('Error deleting channel and its subchannels/posts:', error);
-    res.status(500).json({ message: 'Failed to delete channel and its subchannels/posts' });
+      console.error('Error deleting subchannel:', error);
+      res.status(500).json({ message: 'Failed to delete subchannel' });
   }
 });
-
 
 
 module.exports = router;
