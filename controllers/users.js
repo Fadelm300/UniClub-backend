@@ -546,5 +546,40 @@ router.put('/togglemoderator/*' ,  async (req , res) => {
 });
 
 
+router.post('/blockUser', async (req, res) => {
+  const { userId, duration } = req.body;
+
+  const now = new Date(); // Current date and time
+  let blockedUntil;
+
+  switch (duration) {
+      case '24h':
+          blockedUntil = new Date(now.setHours(now.getHours() + 24));
+          break;
+      case '30d':
+          blockedUntil = new Date(now.setDate(now.getDate() + 30));
+          break;
+      case '10y':
+          blockedUntil = new Date(now.setFullYear(now.getFullYear() + 10));
+          break;
+      default:
+          return res.status(400).json({ message: 'Invalid duration' });
+  }
+
+  try {
+      const user = await User.findByIdAndUpdate(userId, { blockedUntil }, { new: true });
+
+      // حق يحذف اوتوماتيك اذا خلص الوقت 
+      setTimeout(async () => {
+          await User.findByIdAndUpdate(userId, { $unset: { blockedUntil: '' } });
+          console.log(`User ${userId} has been unblocked.`);
+      }, blockedUntil.getTime() - Date.now());
+
+      res.status(200).json({ message: `User blocked until ${blockedUntil}` });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
 
 module.exports = router;
