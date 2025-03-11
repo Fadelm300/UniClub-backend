@@ -82,33 +82,29 @@ router.post("/report/:postId", async (req, res) => {
 
 
 
-
-
 router.get('/reported/*', async (req, res) => {
   try {
     const path = req.params[0];
-      console.log(path)
-      const channelData = await Channel.findOne({path:path}).populate('posts');
-      if (!channelData) {
-          return res.status(404).json({ message: 'Channel not found' });
-      }
+    console.log(path);
 
-      const reportedPosts = await Post.find({
-          _id: { $in: channelData.posts }, 
-          "report.0": { $exists: true } 
-      })
-      .populate('user', 'username image') 
-      .populate('report.user', 'username'); 
+    const channelData = await Channel.findOne({ path }).populate('posts');
+    if (!channelData) {
+      return res.status(404).json({ message: 'Channel not found' });
+    }
 
-      if (reportedPosts.length === 0) {
-          return res.status(404).json({ message: 'No reported posts found in this channel' });
-      }
+    const reportedPosts = await Post.find({
+      _id: { $in: channelData.posts },
+      "report.0": { $exists: true }
+    })
+    .populate('user', 'username image')
+    .populate('report.user', 'username');
 
-      res.status(200).json(reportedPosts);
+    res.status(200).json(reportedPosts); 
   } catch (error) {
-      res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 // Delete a single report from a post
 router.delete("/report/:postId", async (req, res) => {

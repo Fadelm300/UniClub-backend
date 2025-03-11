@@ -548,7 +548,7 @@ router.put('/togglemoderator/*' ,  async (req , res) => {
 router.post('/blockUser', async (req, res) => {
   const { userId, duration } = req.body;
 
-  if (!['24h', '30d', '10y'].includes(duration)) {
+  if (!['1m','24h', '30d', '10y'].includes(duration)) {
       return res.status(400).json({ message: 'Invalid duration' });
   }
 
@@ -563,16 +563,22 @@ router.post('/blockUser', async (req, res) => {
       let blockedUntil;
 
       switch (duration) {
-          case '24h':
-              blockedUntil = new Date(now.setHours(now.getHours() + 24));
-              break;
-          case '30d':
-              blockedUntil = new Date(now.setDate(now.getDate() + 30));
-              break;
-          case '10y':
-              blockedUntil = new Date(now.setFullYear(now.getFullYear() + 10));
-              break;
-      }
+        case '1m':
+            blockedUntil = new Date(now.setMinutes(now.getMinutes() + 1)); // ✅ 1 Minute Block
+            break;
+        case '24h':
+            blockedUntil = new Date(now.setHours(now.getHours() + 24)); // ✅ 24 Hours Block
+            break;
+        case '30d':
+            blockedUntil = new Date(now.setDate(now.getDate() + 30)); // ✅ 30 Days Block
+            break;
+        case '10y':
+            blockedUntil = new Date(now.setFullYear(now.getFullYear() + 10)); // ✅ 10 Years Block
+            break;
+        default:
+            return res.status(400).json({ message: 'Invalid duration' }); // ❌ Handle invalid values
+    }
+    
 
       await User.findByIdAndUpdate(userId, { blockedUntil }, { new: true });
 
