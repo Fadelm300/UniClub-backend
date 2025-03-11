@@ -36,6 +36,13 @@ const userSchema = new mongoose.Schema({
   
   joinedChannels:
   [{type: mongoose.Schema.Types.ObjectId, ref: 'Channel'}],
+ 
+ 
+  blockedUntil: { 
+    type: Date, 
+    default: null 
+  }
+  
   
 });
 

@@ -545,6 +545,50 @@ router.put('/togglemoderator/*' ,  async (req , res) => {
 
 });
 
+router.post('/blockUser', async (req, res) => {
+  const { userId, duration } = req.body;
+
+  if (!['1m','24h', '30d', '10y'].includes(duration)) {
+      return res.status(400).json({ message: 'Invalid duration' });
+  }
+
+  try {
+      const user = await User.findById(userId);
+
+      if (user.blockedUntil && user.blockedUntil > new Date()) {
+          return res.status(400).json({ message: 'User is already blocked until ' + user.blockedUntil });
+      }
+
+      const now = new Date(); 
+      let blockedUntil;
+
+      switch (duration) {
+        case '1m':
+            blockedUntil = new Date(now.setMinutes(now.getMinutes() + 1)); // ✅ 1 Minute Block
+            break;
+        case '24h':
+            blockedUntil = new Date(now.setHours(now.getHours() + 24)); // ✅ 24 Hours Block
+            break;
+        case '30d':
+            blockedUntil = new Date(now.setDate(now.getDate() + 30)); // ✅ 30 Days Block
+            break;
+        case '10y':
+            blockedUntil = new Date(now.setFullYear(now.getFullYear() + 10)); // ✅ 10 Years Block
+            break;
+        default:
+            return res.status(400).json({ message: 'Invalid duration' }); // ❌ Handle invalid values
+    }
+    
+
+      await User.findByIdAndUpdate(userId, { blockedUntil }, { new: true });
+
+      res.status(200).json({ message: `User blocked until ${blockedUntil}` });
+
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 module.exports = router;

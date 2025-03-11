@@ -82,33 +82,29 @@ router.post("/report/:postId", async (req, res) => {
 
 
 
-
-
 router.get('/reported/*', async (req, res) => {
   try {
     const path = req.params[0];
-      console.log(path)
-      const channelData = await Channel.findOne({path:path}).populate('posts');
-      if (!channelData) {
-          return res.status(404).json({ message: 'Channel not found' });
-      }
+    console.log(path);
 
-      const reportedPosts = await Post.find({
-          _id: { $in: channelData.posts }, 
-          "report.0": { $exists: true } 
-      })
-      .populate('user', 'username image') 
-      .populate('report.user', 'username'); 
+    const channelData = await Channel.findOne({ path }).populate('posts');
+    if (!channelData) {
+      return res.status(404).json({ message: 'Channel not found' });
+    }
 
-      if (reportedPosts.length === 0) {
-          return res.status(404).json({ message: 'No reported posts found in this channel' });
-      }
+    const reportedPosts = await Post.find({
+      _id: { $in: channelData.posts },
+      "report.0": { $exists: true }
+    })
+    .populate('user', 'username image')
+    .populate('report.user', 'username');
 
-      res.status(200).json(reportedPosts);
+    res.status(200).json(reportedPosts); 
   } catch (error) {
-      res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 // Delete a single report from a post
 router.delete("/report/:postId", async (req, res) => {
@@ -173,11 +169,27 @@ router.post('/*/upload' , async(req, res) => {
     
 });
 
-router.post('/*' ,async(req, res) => {
+router.post('/*', async (req, res) => {
   try {
     const channelPath = req.params[0];
     req.body.path = channelPath;
     req.body.user = req.user.id;
+
+    // Find the user by their ID
+    const user = await User.findById(req.user.id);
+
+    // Check if the user is blocked
+    if (user.blockedUntil && user.blockedUntil > new Date()) {
+      return res.status(403).json({ message: `You are blocked until ${user.blockedUntil}` });
+    }
+
+    // If the block time has expired, unset the blockedUntil field
+    if (user.blockedUntil && user.blockedUntil <= new Date()) {
+      user.blockedUntil = null;
+      await user.save();
+    }
+
+    // Check if the post has a link (file upload)
     if (req.body.link) {
       const file = await File.create({
         link: req.body.link,
@@ -197,19 +209,14 @@ router.post('/*' ,async(req, res) => {
       channel.posts.push(post._id);
       channel.files.push(file._id);
       await channel.save();
-    }else{
+    } else {
       const post = await Post.create(req.body);
       const channel = await Channel.findOne({ path: channelPath });
       channel.posts.push(post._id);
       await channel.save();
     }
-    
 
-    
-
-    
-    
-    res.status(201).json({message:'post created'});
+    res.status(201).json({ message: 'Post created' });
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(500).json(error);
