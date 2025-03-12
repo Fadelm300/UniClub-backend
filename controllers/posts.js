@@ -194,7 +194,7 @@ router.post('/*', async (req, res) => {
       const file = await File.create({
         link: req.body.link,
         user: req.user.id,
-        title: req.body.fileName,
+        title: req.body.title,
         description: req.body.description,
         type: req.body.type
       });
