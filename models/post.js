@@ -8,6 +8,9 @@ const commentSchema = new mongoose.Schema(
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    file:{
+      type: mongoose.Schema.Types.ObjectId, ref: 'File'
+    },
   },
   { timestamps: true }
 );

@@ -17,7 +17,8 @@ router.get('/getpost/*/:postId', async (req, res) => {
     const post = await Post.findById(postId).populate([
       { path: "user", model: "User" },
       { path: "comments.user", model: "User" },
-      { path: "file", model: "File"} 
+      { path: "file", model: "File"},
+      { path: "comments.file", model: "File"}
     ]);
 
     if (!post) {
