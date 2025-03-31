@@ -163,14 +163,14 @@ router.delete("/report/all/:postId", async (req, res) => {
 
 
 
-router.post('/*/upload' , async(req, res) => {
+router.post('/upload' , async(req, res) => {
       const result = await uploadFile();
       res.status(201).json(result);
       console.log(result);
     
 });
 
-router.post('/*', async (req, res) => {
+router.post('/postpost/*', async (req, res) => {
   try {
     const channelPath = req.params[0];
     req.body.path = channelPath;

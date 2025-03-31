@@ -20,7 +20,10 @@ const channelSchema = new mongoose.Schema(
     moderator: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     moderators: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     subchannels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Channel' }],
-    files:[{type: mongoose.Schema.Types.ObjectId, ref: 'File'}]
+    files:[{type: mongoose.Schema.Types.ObjectId, ref: 'File'}],
+    picture: {
+      type: String,
+    },
   },
 );
 
