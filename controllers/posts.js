@@ -17,7 +17,8 @@ router.get('/getpost/*/:postId', async (req, res) => {
     const post = await Post.findById(postId).populate([
       { path: "user", model: "User" },
       { path: "comments.user", model: "User" },
-      { path: "file", model: "File"} 
+      { path: "file", model: "File"},
+      { path: "comments.file", model: "File"}
     ]);
 
     if (!post) {
@@ -162,14 +163,14 @@ router.delete("/report/all/:postId", async (req, res) => {
 
 
 
-router.post('/*/upload' , async(req, res) => {
+router.post('/upload' , async(req, res) => {
       const result = await uploadFile();
       res.status(201).json(result);
       console.log(result);
     
 });
 
-router.post('/*', async (req, res) => {
+router.post('/postpost/*', async (req, res) => {
   try {
     const channelPath = req.params[0];
     req.body.path = channelPath;
@@ -194,7 +195,7 @@ router.post('/*', async (req, res) => {
       const file = await File.create({
         link: req.body.link,
         user: req.user.id,
-        title: req.body.fileName,
+        title: req.body.title,
         description: req.body.description,
         type: req.body.type
       });
