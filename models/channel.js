@@ -6,6 +6,10 @@ const channelSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    titel: {
+      type: String,
+      required: true,
+    },
     path:{
       type: String,
       required: true,

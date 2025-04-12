@@ -52,17 +52,25 @@ app.get("/base", async (req, res) => {
     }
   });
   
-app.post("/uploadImg", async (req, res) => {
-  uploadImage(req.body.image)
+  app.post("/uploadImg", async (req, res) => {
+    const image = req.body.image;
   
-    .then((url) => {
-      console.log(url)
+    if (!image) {
+      console.log("Missing image in request body");
+      return res.status(400).json({ error: "Missing image in request body" });
+    }
+  
+    try {
+      const url = await uploadImage(image); 
       res.status(200).json({ url });
-    })
-    .catch((error) => {
-      res.status(400).json({ error });
-    });
-});
+    } catch (error) {
+      console.error(error.message);
+      res.status(400).json({ error: error.message });
+    }
+    
+
+  });
+  
 
 
 const upload = multer({ storage: multer.memoryStorage() });
