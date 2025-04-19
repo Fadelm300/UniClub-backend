@@ -81,6 +81,42 @@ router.post("/report/:postId", async (req, res) => {
   }
 });
 
+router.put('/allow/:postId', async (req, res) => {
+  try {
+    const postId = req.params.postId;
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).send("Post not found");
+    }
+
+    post.flag = false;
+    await post.save();
+    const channel = await Channel.findOne({ path: post.path });
+    channel.posts.push(post._id);
+    channel.files.push(post.file);
+    await channel.save();
+
+    res.status(200).json(post);
+  } catch (error) {
+    console.error('Error updating post:', error);
+    res.status(500).json(error);
+  }
+})
+
+router.delete('/deleteflagged/*', async (req, res) => {
+  try{
+    const postId = req.params.postId;
+    const post = Post.findByIdAndDelete(postId);
+    res.status(200).json({ message: "Post deleted successfully" });
+  }
+  catch (error) {
+    console.error('Error deleting flagged post:', error);
+    res.status(500).json(error);
+  }
+})
+
 
 
 router.get('/reported/*', async (req, res) => {
@@ -100,7 +136,13 @@ router.get('/reported/*', async (req, res) => {
     .populate('user', 'username image')
     .populate('report.user', 'username');
 
-    res.status(200).json(reportedPosts); 
+    const flaggedPosts = await Post.find({
+      path: path,
+      flag: true
+    }).populate('user', 'username image');
+    
+
+    res.status(200).json([reportedPosts,flaggedPosts]); 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -261,6 +303,7 @@ router.delete('/*/:postId', async (req, res) => {
   try {
     const postId = req.params.postId;
     const channelPath = req.params[0];
+
     const channel = await Channel.findOne({ path: channelPath }).populate("posts");
 
     if (!channel) {
@@ -396,5 +439,7 @@ router.get('/search', async (req, res) => {
     res.status(500).json(error);
   }
 });
+
+
 
 module.exports = router;
