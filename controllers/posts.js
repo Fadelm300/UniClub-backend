@@ -163,7 +163,7 @@ router.delete("/report/all/:postId", async (req, res) => {
 
 
 
-router.post('/upload' , async(req, res) => {
+router.post('/upload' , async(req, res) => {                    
       const result = await uploadFile();
       res.status(201).json(result);
       console.log(result);
@@ -205,6 +205,11 @@ router.post('/postpost/*', async (req, res) => {
 
       file.post = post._id;
       await file.save();
+
+      if(post.flag){
+        res.status(401).json({ message: 'post flagged' });
+        return;
+      }
 
       const channel = await Channel.findOne({ path: channelPath });
       channel.posts.push(post._id);

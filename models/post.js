@@ -39,7 +39,11 @@ const postSchema = new mongoose.Schema(
     report: [{
       user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       reason: { type: String, required: true }
-    }]
+    }],
+    flag: {
+      type: Boolean,
+      default: false
+    },
   },
   { timestamps: true }
 );
