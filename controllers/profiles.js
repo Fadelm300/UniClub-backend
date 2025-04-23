@@ -18,8 +18,12 @@ router.get('/:userId', verifyToken, async (req, res) => {
     }
 
    
-    const posts = await Post.find({ user: req.user.id });
-
+const posts = await Post.find({ user: req.user.id  }).populate([
+      { path: "user", select: "username" },
+      { path: "comments.user",select: "username , image"},
+      { path: "file", model: "File"},
+      { path: "comments.file", model: "File"}
+    ]);
     res.json({ user, posts });
   } catch (error) {
     if (res.statusCode === 404) {
