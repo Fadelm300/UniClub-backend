@@ -3,6 +3,7 @@ const verifyToken = require('../middleware/verify-token.js');
 const router = express.Router();
 const File = require('../models/file.js');
 const Channel = require('../models/channel.js');
+const { uploadFile, deleteFile, getFileUrl } = require("../upload.js");
 
 
 // ========= Routes =========
@@ -112,6 +113,11 @@ router.delete('/*/:fileId', async (req, res) => {
     const file = await File.findByIdAndDelete(fileId);
     if (!file) {
       throw new Error("File not found");
+    }
+
+    if(file.type!='link'){
+    const key = file.link.substring(file.link.lastIndexOf('/') + 1);
+    deleteFile(key);
     }
 
     channel.files = channel.files.filter(f => f.toString() !== file._id.toString());

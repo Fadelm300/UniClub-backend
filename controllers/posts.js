@@ -319,6 +319,16 @@ router.delete('/*/:postId', async (req, res) => {
     if (!post) {
       throw new Error("Post deletion failed");
     }
+    if(post.file){
+      const file = await File.findByIdAndDelete(post.file);
+      if (!file) {
+        throw new Error("File deletion failed");
+      }
+      const key = file.link.substring(file.link.lastIndexOf('/') + 1);
+      deleteFile(key);
+      
+      
+    }
 
     channel.posts.splice(postIndex, 1);
     await channel.save();
