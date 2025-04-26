@@ -19,6 +19,9 @@ const adminRouter = require ('./controllers/admin.js');
 const EventRouter = require('./controllers/eventController');
 const uploadImage = require("./uploadImage.js");
 const { uploadFile, deleteFile, getFileUrl } = require("./upload.js");
+const contactRouter = require('./controllers/contact'); // 🔥 جديد
+
+
 mongoose.connect(process.env.MONGODB_URI);
 
 mongoose.connection.on('connected', () => {
@@ -39,6 +42,7 @@ app.use('/files',FileRouter);
 app.use('/comments' , commentRouter)
 app.use('/admin' , adminRouter)
 app.use('/event', EventRouter )
+app.use('/contact', contactRouter);;
 
 
 app.get("/base", async (req, res) => {
