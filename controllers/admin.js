@@ -8,9 +8,8 @@ const user = require("../models/user");
 router.get('/users',verifyToken, async (req, res) => {
     try {
 
-        const page = 1; // You can change this dynamically based on the request
-        const limit = 20;
-        const users = await User.find({ _id: { $ne: req.user.id } }).skip((page - 1) * limit).limit(limit);
+     
+        const users = await User.find({ _id: { $ne: req.user.id } })
         
         res.json(users);
 
