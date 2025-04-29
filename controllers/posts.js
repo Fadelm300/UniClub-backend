@@ -12,7 +12,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ========== Public Routes ===========
 router.get('/getpost/*/:postId', async (req, res) => {
   try {
-    const { path, postId } = req.params;
+    const { path , postId } = req.params;
 
     const post = await Post.findById(postId).populate([
       { path: "user", model: "User" },
@@ -31,6 +31,31 @@ router.get('/getpost/*/:postId', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+router.get('/posts/:channelId/:sortby' , async (req, res) => {
+  try {
+    const channelId = req.params.channelId;
+    const sortby = req.params.sortby;
+
+    const channel = await Channel.findById(channelId).lean();
+    let posts = await Post.find({ _id: { $in: channel.posts } })
+      .populate('user')
+      .populate('file')
+      .lean();
+      if (sortby === 'n' || sortby === 'm') {
+        posts = posts.reverse();
+      } 
+      if (sortby === 'm') {
+        posts.sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+      }
+      res.status(200).json(posts);
+    
+
+  }catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+})
 
 
 // ========== Protected Routes ==========
