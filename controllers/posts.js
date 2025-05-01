@@ -12,7 +12,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ========== Public Routes ===========
 router.get('/getpost/*/:postId', async (req, res) => {
   try {
-    const { path, postId } = req.params;
+    const { path , postId } = req.params;
 
     const post = await Post.findById(postId).populate([
       { path: "user", model: "User" },
@@ -28,6 +28,78 @@ router.get('/getpost/*/:postId', async (req, res) => {
     res.status(200).json(post);
   } catch (error) {
     console.error('Error fetching post:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+router.get('/posts/:channelId', async (req, res) => {
+  try {
+    const channelId = req.params.channelId;
+    const {sortby, query, course} = req.query;
+    
+
+    const channel = await Channel.findById(channelId).lean();
+    let posts = await Post.find({ _id: { $in: channel.posts } })
+      .populate('user')
+      .populate('file')
+      .lean();
+      if (course !== 'all') {
+        const [academicYear, semester] = course.split('_'); // "2024/2025", "First"
+        const [startYear, endYear] = academicYear.split('/').map(Number); // [2024, 2025]
+      
+        posts = posts.filter(post => {
+          const createdDate = new Date(post.createdAt);
+          const month = createdDate.getUTCMonth() + 1; // getUTCMonth() is 0-based (0 = January)
+          const year = createdDate.getUTCFullYear();   // full year like 2025
+      
+          let inSemester = false;
+      
+          switch (semester) {
+            case 'First':
+              if (
+                (month >= 9 && year === startYear) ||    // Sep-Dec of first year
+                (month <= 2 && year === endYear)          // Jan-Feb of second year
+              ) {
+                inSemester = true;
+              }
+              break;
+      
+            case 'Second':
+              if (
+                (month >= 2 && month <= 6 && year === endYear) // Feb-June of second year
+              ) {
+                inSemester = true;
+              }
+              break;
+      
+            case 'Summer':
+              if (
+                (month >= 6 && month <= 9 && year === endYear) // June-Sep of second year
+              ) {
+                inSemester = true;
+              }
+              break;
+      
+            default:
+              break;
+          }
+      
+          return inSemester;
+        });
+      }
+      if (sortby === 'n' || sortby === 'm') {
+        posts = posts.reverse();
+      }if (sortby === 'm') {
+        posts.sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+      }if(query !=''){
+        posts = posts.filter(post => post.text.toLowerCase().includes(query.toLowerCase()));
+      }
+      res.status(200).json(posts);
+    
+
+  }catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 });

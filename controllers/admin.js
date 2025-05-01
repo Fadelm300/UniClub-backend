@@ -8,7 +8,7 @@ const user = require("../models/user");
 router.get('/users',verifyToken, async (req, res) => {
     try {
 
-     
+
         const users = await User.find({ _id: { $ne: req.user.id } })
         
         res.json(users);
