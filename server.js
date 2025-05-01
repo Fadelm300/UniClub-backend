@@ -8,7 +8,6 @@ const multer = require("multer");
 const app = express();
 const mongoose = require('mongoose');
 const testJWTRouter = require('./controllers/test-jwt');
-
 const usersRouter = require('./controllers/users');
 const profilesRouter = require('./controllers/profiles');
 const postsRouter = require('./controllers/posts.js');
@@ -19,7 +18,9 @@ const adminRouter = require ('./controllers/admin.js');
 const EventRouter = require('./controllers/eventController');
 const uploadImage = require("./uploadImage.js");
 const { uploadFile, deleteFile, getFileUrl } = require("./upload.js");
-const contactRouter = require('./controllers/contact'); // 🔥 جديد
+const creativeSpaceRouter = require('./controllers/creativeSpace.js');
+const contactRouter = require('./controllers/contact'); 
+
 
 
 mongoose.connect(process.env.MONGODB_URI);
@@ -42,7 +43,9 @@ app.use('/files',FileRouter);
 app.use('/comments' , commentRouter)
 app.use('/admin' , adminRouter)
 app.use('/event', EventRouter )
-app.use('/contact', contactRouter);;
+
+app.use('/creativespaces', creativeSpaceRouter);
+app.use('/contact', contactRouter);
 
 
 app.get("/base", async (req, res) => {
