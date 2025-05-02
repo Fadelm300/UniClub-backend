@@ -75,27 +75,25 @@ router.delete('/:userId', verifyToken, async (req, res) => {
   }
 });
 
+
+
 router.get('/other/:userId', verifyToken, async (req, res) => {
   try {
-   
-    
-
-    const user = await User.findById(req.params.userId);
+    const user = await User.findById(req.params.userId).select('-password');
     if (!user) {
-      res.status(404);
-      throw new Error('Profile not found.');
+      return res.status(404).json({ error: 'Profile not found.' });
     }
 
-   
-    const posts = await Post.find({ user: req.params.userId });
+    const posts = await Post.find({ user: req.params.userId }).populate([
+      { path: "user", select: "username" },
+      { path: "comments.user", select: "username image" },
+      { path: "file", model: "File" },
+      { path: "comments.file", model: "File" }
+    ]);
 
     res.json({ user, posts });
   } catch (error) {
-    if (res.statusCode === 404) {
-      res.status(404).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: error.message });
-    }
+    res.status(500).json({ error: error.message });
   }
 });
 
