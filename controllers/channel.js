@@ -7,10 +7,15 @@ router.get("/*", async (req, res) => {
   try {
     const channelPath = req.params[0];
     const channel = await Channel.findOne({ path: channelPath }).populate([
-      { path: "subchannels", select: "name" },
-
-      { path: "subchannels", select: "titel" },
-
+      { path: "subchannels", select: "name , title"},
+      // {
+      //   path: "posts",
+      //   model: "Post",
+      //   populate: [
+      //     { path: "user", model: "User" },
+      //     { path: "file", model: "File" }
+      //   ]
+      // },
       {
         path: "files",
         model: "File",
