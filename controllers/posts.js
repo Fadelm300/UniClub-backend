@@ -177,10 +177,10 @@ router.put('/allow/:postId', async (req, res) => {
   }
 })
 
-router.delete('/deleteflagged/*', async (req, res) => {
+router.delete('/deleteflagged/:postId', async (req, res) => {
   try{
     const postId = req.params.postId;
-    const post = Post.findByIdAndDelete(postId);
+    const post = await Post.findByIdAndDelete(postId);
     res.status(200).json({ message: "Post deleted successfully" });
   }
   catch (error) {
