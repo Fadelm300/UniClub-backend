@@ -5,7 +5,8 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
     try {
-        const events = await Event.find();
+        const events = await Event.find({date : { $gte: new Date() }})
+            .sort({ date: 1 });
         res.status(200).json(events);
     } catch (error) {
         res.status(500).json({ message: error.message });
