@@ -5,9 +5,13 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
     try {
-        const events = await Event.find({date : { $gte: new Date() }})
+        const futureEvents = await Event.find({date : { $gte: new Date() }})
             .sort({ date: 1 });
-        res.status(200).json(events);
+
+        const pastEvents = await Event.find({date : { $lt: new Date() }})
+            .sort({ date: -1 });
+        
+        res.status(200).json([futureEvents , pastEvents]);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
