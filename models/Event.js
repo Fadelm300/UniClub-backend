@@ -24,6 +24,9 @@ const eventSchema = new mongoose.Schema({
     image: {
         type: String,
       },
+    path:{
+        type: String,
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Event', eventSchema);

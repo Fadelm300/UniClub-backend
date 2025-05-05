@@ -3,16 +3,20 @@ const Event = require('../models/Event');
 const verifyToken = require('../middleware/verify-token.js'); 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/get/*', async (req, res) => {
     try {
-        const futureEvents = await Event.find({date : { $gte: new Date() }})
+        const path = req.params[0] || '';
+        console.log(path);
+        
+        const futureEvents = await Event.find({date : { $gte: new Date() }, path: path})
             .sort({ date: 1 });
 
-        const pastEvents = await Event.find({date : { $lt: new Date() }})
+        const pastEvents = await Event.find({date : { $lt: new Date() }, path: path})
             .sort({ date: -1 });
         
         res.status(200).json([futureEvents , pastEvents]);
     } catch (error) {
+        console.log(error.message);
         res.status(500).json({ message: error.message });
     }
 });
@@ -27,10 +31,11 @@ router.get('/:eventid', async (req, res) => {
 });
 
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/add/*', verifyToken, async (req, res) => {
+    const path = req.params[0];
+    console.log(path);
     const { title, description, date, time, location, image } = req.body;
-    const newEvent = new Event({ title, description, date, time, location, image });
-
+    const newEvent = new Event({ title, description, date, time, location, image, path});
     try {
         const savedEvent = await newEvent.save();
         res.status(201).json(savedEvent);
