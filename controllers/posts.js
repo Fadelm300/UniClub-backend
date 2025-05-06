@@ -10,27 +10,41 @@ const { uploadFile, deleteFile, getFileUrl } = require("../upload.js");
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ========== Public Routes ===========
+const viewCounter = new Map(); // postId => count
+
 router.get('/getpost/*/:postId', async (req, res) => {
   try {
-    const { path , postId } = req.params;
-
+    const { postId } = req.params;
+    
     const post = await Post.findById(postId).populate([
       { path: "user", model: "User" },
       { path: "comments.user", model: "User" },
-      { path: "file", model: "File"},
-      { path: "comments.file", model: "File"}
+      { path: "file", model: "File" },
+      { path: "comments.file", model: "File" }
     ]);
 
     if (!post) {
       return res.status(404).json({ message: "Post not found in channel" });
     }
-    
+
+    const currentCount = viewCounter.get(postId) || 0;
+    const newCount = currentCount + 1;
+
+    if (newCount >= 2) {
+      post.views = (post.views || 0) + 1;
+       post.save();
+      viewCounter.set(postId, 0);  
+    } else {
+      viewCounter.set(postId, newCount);
+    }
+
     res.status(200).json(post);
   } catch (error) {
     console.error('Error fetching post:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 
 router.get('/posts/:channelId', async (req, res) => {
