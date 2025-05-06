@@ -1,8 +1,8 @@
 
 <h1 style="text-align:center;">UniClub</h1>
 
-![alt text](public/UniClub_img/1.png)
-![alt text](public/UniClub_img/2.png)
+![alt text](img/UniClub_img/1.png)
+![alt text](img/UniClub_img/2.png)
 ## Date:12/9/2024
 
 ## website description :
@@ -41,30 +41,30 @@ Before the user signs up or signs in, he can only view the channels and the post
 
 # Screenshots
 
-![alt text](public/UniClub_img/1.png)
-![alt text](public/UniClub_img/2.png)
-![alt text](public/UniClub_img/3.png)
-![alt text](public/UniClub_img/4.png)
-![alt text](public/UniClub_img/about_us.png)
-![alt text](public/UniClub_img/Our_Services.png)
-![alt text](public/UniClub_img/sign_in.png)
-![alt text](public/UniClub_img/sign_up.png)
-![alt text](public/UniClub_img/Reset_Password.png)
+![alt text](img/UniClub_img/1.png)
+![alt text](img/UniClub_img/2.png)
+![alt text](img/UniClub_img/3.png)
+![alt text](img/UniClub_img/4.png)
+![alt text](img/UniClub_img/about_us.png)
+![alt text](img/UniClub_img/Our_Services.png)
+![alt text](img/UniClub_img/sign_in.png)
+![alt text](img/UniClub_img/sign_up.png)
+![alt text](img/UniClub_img/Reset_Password.png)
 ## landing page
-![alt text](public/UniClub_img/5.png)
-![alt text](public/UniClub_img/6.png)
-![alt text](public/UniClub_img/7.png)
+![alt text](img/UniClub_img/5.png)
+![alt text](img/UniClub_img/6.png)
+![alt text](img/UniClub_img/7.png)
 ## Search
-![alt text](public/UniClub_img/8.png)
+![alt text](img/UniClub_img/8.png)
 ## Files / Media / Links 
-![alt text](public/UniClub_img/file_1.png)
-![alt text](public/UniClub_img/file_2.png)![alt text](public/UniClub_img/file_3.png)
+![alt text](img/UniClub_img/file_1.png)
+![alt text](img/UniClub_img/file_2.png)![alt text](img/UniClub_img/file_3.png)
 ## User profile
 <p align="center">
-  <img src="public/UniClub_img/9.2.png"align="center" alt="alt text" />
+  <img src="img/UniClub_img/9.2.png"align="center" alt="alt text" />
 </p>
 
-![alt text](public/UniClub_img/9.3.png)
+![alt text](img/UniClub_img/9.3.png)
 # Difficulties
 - Managing and displaying nested channels and subchannels in a clear and intuitive UI.
 - Handling real-time updates and synchronization between users (e.g., for posts, comments).
