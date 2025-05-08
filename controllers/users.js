@@ -95,10 +95,10 @@ router.post('/signup', async (req, res) => {
     if (userInDatabase) {
       return res.status(400).json({ error: 'Username already taken.' });
     }
-    // const emailInDatabase = await User.findOne({ email: req.body.email });
-    // if (emailInDatabase) {
-    //   return res.status(400).json({ error: 'Email already associated with an account.' });
-    // }
+    const emailInDatabase = await User.findOne({ email: req.body.email });
+    if (emailInDatabase) {
+      return res.status(400).json({ error: 'Email already associated with an account.' });
+    }
     
     // Generate OTP
     const randomNumber = Math.floor(100000 + Math.random() * 900000);
@@ -141,7 +141,7 @@ router.post('/signup', async (req, res) => {
       } catch (error) {
         console.log('OTP expiration: User not found or already deleted.');
       }
-    }, 4 * 60 * 1000);
+    }, 10 * 60 * 1000);
 
     res.status(201).json({ message: 'OTP sent successfully.' });
   }
