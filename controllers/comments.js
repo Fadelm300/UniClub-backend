@@ -8,6 +8,26 @@ const router = express.Router();
 
 router.use(verifyToken);
 
+router.delete('/delete/:postId/:commentId', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+    if (comment.user.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+    post.comments.pop(comment);
+    await post.save();
+    res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+}
+);
+
 router.post('/*/:postId', async (req, res) => {
   try {
     const channelPath = req.params[0];
@@ -37,6 +57,8 @@ router.post('/*/:postId', async (req, res) => {
     res.status(500).json(error);
   }
 });
+
+
 
 
 module.exports = router;
