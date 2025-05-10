@@ -15,7 +15,7 @@ router.delete('/delete/:postId/:commentId', async (req, res) => {
     if (!comment) {
       return res.status(404).json({ message: 'Comment not found' });
     }
-    if (comment.user.toString() !== req.user.id) {
+    if (comment.user.toString() !== req.user.id || !req.user.admin || post.user.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
     post.comments.pop(comment);
