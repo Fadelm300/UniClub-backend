@@ -422,6 +422,8 @@ router.post('/resetpasswordstep3', async (req, res)=>{
   }
 });
 
+
+
 router.put('/follow/:followid',verifyToken, async (req, res) => {
   try {
     const followedUser = await User.findById(req.params.followid);
@@ -438,11 +440,11 @@ router.put('/follow/:followid',verifyToken, async (req, res) => {
         UserUser.following.push(req.params.followid);
 
       }
-    followedUser.save();
-    UserUser.save();
+    await followedUser.save();
+    await UserUser.save();
     res.status(201).send(follow);
   } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ error: error.message });
   }
 
 });
