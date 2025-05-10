@@ -391,16 +391,7 @@ router.delete('/*/:postId', async (req, res) => {
     const postId = req.params.postId;
     const channelPath = req.params[0];
 
-    const channel = await Channel.findOne({ path: channelPath }).populate("posts");
-
-    if (!channel) {
-      throw new Error("Channel not found");
-    }
-
-    const postIndex = channel.posts.findIndex(post => post._id.toString() === postId);
-    if (postIndex === -1) {
-      throw new Error("Post not found");
-    }
+    
 
     const post = await Post.findByIdAndDelete(postId);
     if (!post) {
@@ -416,10 +407,20 @@ router.delete('/*/:postId', async (req, res) => {
       
       
     }
+    if(!post.flag){
+      const channel = await Channel.findOne({ path: channelPath }).populate("posts");
 
-    channel.posts.splice(postIndex, 1);
-    await channel.save();
+      if (!channel) {
+        throw new Error("Channel not found");
+      }
 
+      const postIndex = channel.posts.findIndex(post => post._id.toString() === postId);
+      if (postIndex === -1) {
+        throw new Error("Post not found");
+      }
+      channel.posts.splice(postIndex, 1);
+      await channel.save();
+    }
     res.status(200).json(post);
   } catch (error) {
     console.error('Error deleting post:', error);
