@@ -305,7 +305,7 @@ router.post('/resendotp', async (req, res) => {
       } catch (error) {
         console.error('Error expiring OTP:', error.message);
       }
-    }, 3 * 60 * 1000);
+    }, 5 * 60 * 1000);
   } catch (error) {
     console.error('Resend OTP error:', error.message);
     res.status(500).json({ error: error.message });
@@ -381,6 +381,8 @@ router.post('/resetpasswordstep2', async (req, res)=>{
   try{
     const email = req.body.email;
     const username = req.body.username;
+    console.log(email)
+    console.log(username)
     const enteredOtp = req.body.otp;
     const tempUser = await TEMPUSER.findOne({ $or: [{ username: username }, { email: email }]});
     if(tempUser?.otp){
@@ -396,6 +398,7 @@ router.post('/resetpasswordstep2', async (req, res)=>{
     }
     
   }catch(error){
+    console.log(error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -405,6 +408,7 @@ router.post('/resetpasswordstep3', async (req, res)=>{
     const email = req.body.email;
     const username = req.body.username;
     const password = req.body.password;
+
     const user = await User.findOne({ $or: [{ username: username }, { email: email }]});
     const tempUser = await TEMPUSER .findOne({ $or: [{ username: username }, { email: email }]});
     if(user && tempUser?.reset){
