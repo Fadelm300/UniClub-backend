@@ -137,7 +137,7 @@ router.post('/signup', async (req, res) => {
     // Expire OTP after 3 minutes
     setTimeout(async () => {
       try {
-        await TEMPUSER.findByIdAndUpdate(tempUser._id, { otp: 0 });
+        await TEMPUSER.findByIdAndDelete(tempUser._id);
       } catch (error) {
         console.log('OTP expiration: User not found or already deleted.');
       }
@@ -165,7 +165,8 @@ router.post('/verify', async (req, res) => {
     // Find the temporary user by email
     const tempUser = await TEMPUSER.findOne({ email });
     if (!tempUser) {
-      return res.status(404).json({ error: 'Temporary user not found.' });
+      await TEMPUSER.deleteMany({});
+      return res.status(404).json({ error: 'Something went Wrong please try again' });
     }
 
     // Validate OTP
@@ -194,7 +195,6 @@ router.post('/verify', async (req, res) => {
 
     res.status(401).json({ error: 'Invalid OTP.' });
   } catch (error) {
-    console.error('Verification error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
